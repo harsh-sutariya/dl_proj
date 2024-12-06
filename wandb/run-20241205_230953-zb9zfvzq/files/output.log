@@ -1,0 +1,59 @@
+/scratch/hs5580/dl_proj/dataset.py:32: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at ../torch/csrc/utils/tensor_numpy.cpp:206.)
+  states = torch.from_numpy(self.states[i]).float().to(self.device)
+Probe prediction step: 100%|██████████| 156/156 [01:02<00:00,  2.48it/s]
+Probe prediction step: 100%|██████████| 156/156 [00:06<00:00, 25.05it/s]
+normalized pred locations loss 0.88731849193573
+normalized pred locations loss 0.9492984414100647
+Probe prediction step: 100%|██████████| 156/156 [00:06<00:00, 25.06it/s]
+normalized pred locations loss 0.953612744808197
+normalized pred locations loss 1.0333372354507446
+Probe prediction step: 100%|██████████| 156/156 [00:06<00:00, 24.84it/s]
+normalized pred locations loss 1.0898513793945312
+Probe prediction step: 100%|██████████| 156/156 [00:06<00:00, 24.96it/s]
+normalized pred locations loss 1.039965271949768
+normalized pred locations loss 0.9843883514404297
+Probe prediction step: 100%|██████████| 156/156 [00:06<00:00, 24.84it/s]
+normalized pred locations loss 0.9050903916358948
+Probe prediction step: 100%|██████████| 156/156 [00:06<00:00, 24.70it/s]
+normalized pred locations loss 1.0176478624343872
+normalized pred locations loss 0.9850080013275146
+Probe prediction step: 100%|██████████| 156/156 [00:06<00:00, 24.61it/s]
+normalized pred locations loss 1.025083065032959
+Probe prediction step: 100%|██████████| 156/156 [00:06<00:00, 25.31it/s]
+normalized pred locations loss 1.0272088050842285
+normalized pred locations loss 0.8693205714225769
+Probe prediction step: 100%|██████████| 156/156 [00:06<00:00, 25.42it/s]
+normalized pred locations loss 1.031396746635437
+normalized pred locations loss 1.0826451778411865
+Probe prediction step: 100%|██████████| 156/156 [00:06<00:00, 25.24it/s]
+normalized pred locations loss 1.0146597623825073
+Probe prediction step: 100%|██████████| 156/156 [00:06<00:00, 25.31it/s]
+normalized pred locations loss 0.9368826746940613
+normalized pred locations loss 0.8856539726257324
+Probe prediction step: 100%|██████████| 156/156 [00:06<00:00, 25.59it/s]
+normalized pred locations loss 0.9481082558631897
+Probe prediction step: 100%|██████████| 156/156 [00:06<00:00, 25.64it/s]
+normalized pred locations loss 1.0384081602096558
+normalized pred locations loss 0.883419930934906
+Probe prediction step: 100%|██████████| 156/156 [00:06<00:00, 25.84it/s]
+normalized pred locations loss 0.989837646484375
+Probe prediction step: 100%|██████████| 156/156 [00:06<00:00, 25.79it/s]
+normalized pred locations loss 1.03922700881958
+normalized pred locations loss 1.0620670318603516
+Probe prediction step: 100%|██████████| 156/156 [00:06<00:00, 25.74it/s]
+normalized pred locations loss 0.9553545713424683
+Probe prediction step: 100%|██████████| 156/156 [00:06<00:00, 25.46it/s]
+normalized pred locations loss 0.824129581451416
+normalized pred locations loss 0.9358251094818115
+Probe prediction step: 100%|██████████| 156/156 [00:05<00:00, 26.06it/s]
+normalized pred locations loss 1.024445652961731
+normalized pred locations loss 0.9324355721473694
+Probe prediction step: 100%|██████████| 156/156 [00:06<00:00, 25.94it/s]
+normalized pred locations loss 0.982339084148407
+Probe prediction epochs: 100%|██████████| 20/20 [02:59<00:00,  9.00s/it]
+normalized pred locations loss 0.9214438199996948
+normalized pred locations loss 1.0243442058563232
+Eval probe pred: 100%|██████████| 62/62 [00:19<00:00,  3.26it/s]
+Eval probe pred: 100%|██████████| 62/62 [00:18<00:00,  3.31it/s]
+normal loss: 254.27593994140625
+wall loss: 203.65301513671875

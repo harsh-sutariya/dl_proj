@@ -1,0 +1,9 @@
+{"time":"2024-12-05T18:57:52.621678282-05:00","level":"INFO","msg":"using version","core version":"0.18.7"}
+{"time":"2024-12-05T18:57:52.621696769-05:00","level":"INFO","msg":"created symlink","path":"/scratch/hs5580/dl_proj/wandb/run-20241205_185752-40c7pbg3/logs/debug-core.log"}
+{"time":"2024-12-05T18:57:52.862430708-05:00","level":"INFO","msg":"created new stream","id":"40c7pbg3"}
+{"time":"2024-12-05T18:57:52.862464929-05:00","level":"INFO","msg":"stream: started","id":"40c7pbg3"}
+{"time":"2024-12-05T18:57:52.862545689-05:00","level":"INFO","msg":"handler: started","stream_id":"40c7pbg3"}
+{"time":"2024-12-05T18:57:52.866034382-05:00","level":"INFO","msg":"writer: Do: started","stream_id":"40c7pbg3"}
+{"time":"2024-12-05T18:57:52.866065026-05:00","level":"INFO","msg":"sender: started","stream_id":"40c7pbg3"}
+{"time":"2024-12-05T18:57:53.319479771-05:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2024-12-05T19:00:01.538085202-05:00","level":"INFO","msg":"Pausing system monitor"}
