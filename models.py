@@ -97,7 +97,7 @@ class Predictor(nn.Module):
     def forward(self, state, action):
         action_emb = self.action_proj(action)
         next_state = self.rgc(action_emb, state)
-        return self.out(next_state)
+        return self.out(next_state)   
 
 class JEPAModel(nn.Module):
     def __init__(self, device="cuda", repr_dim=256):
@@ -105,8 +105,15 @@ class JEPAModel(nn.Module):
         self.device = device
         self.repr_dim = repr_dim
         
-        # Encoders
-        self.encoder = ViTEncoder(embed_dim=repr_dim)
+        # Deeper ViT encoder
+        self.encoder = ViTEncoder(
+            in_channels=2,
+            img_size=64,
+            patch_size=4,  # Smaller patches
+            embed_dim=repr_dim,
+            num_layers=12,  # Increased from 6
+            num_heads=8
+        )
         self.target_encoder = ViTEncoder(embed_dim=repr_dim)
         
         # Copy parameters from encoder to target_encoder
