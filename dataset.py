@@ -1,6 +1,7 @@
 from typing import NamedTuple, Optional
 import torch
 import numpy as np
+import utils
 
 
 class WallSample(NamedTuple):
@@ -39,6 +40,18 @@ class WallDataset:
 
         return WallSample(states=states, locations=locations, actions=actions)
 
+
+class ObsDataset(torch.utils.data.Dataset):
+    def __init__(self, data_path, device):
+        self.device = device
+        self.images = np.load(f'{data_path}/states.npy', mmap_mode="r")
+        _,_,C,H,W = self.images.shape
+        self.images = self.images.reshape(-1,C,H,W)
+    def __len__(self):
+        return self.images.shape[0]
+    def __getitem__(self,i):
+        return utils.preprocess_img(torch.from_numpy(self.images[i]).float().to(self.device))
+        
 
 def create_wall_dataloader(
     data_path,
