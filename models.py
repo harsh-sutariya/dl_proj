@@ -129,23 +129,32 @@ class Baseline(torch.nn.Module):
             return torch.concat(predicted_embeddings,dim=1),embeddings
                 
 class JEPA(nn.Module):
-    def __init__(self, encoder="resnet50", device = "cuda"):
+    def __init__(self, encoder="resnet50", device = "cuda", context_encoder_path=None, freeze_encoder=True):
         super().__init__()
-        self.device = self.device
-        self.context_encoder = Encoder(encoder) 
+        self.device = device
+        self.context_encoder = Encoder(encoder)
+        if context_encoder_path:
+            self.context_encoder.load_state_dict(torch.load(context_encoder_path, weights_only=True, map_location=self.device))
+            if freeze_encoder:
+                utils.freeze_param(self.context_encoder)
+        self.context_encoder.to(device)
         self.repr_dim = self.context_encoder.repr_dim
-        self.predictor = Predictor(self.repr_dim)
+        self.predictor = Predictor(self.repr_dim).to(device)
 
-    def forward(self, states, actions):
-        states = utils.preprocess_state(state)
+    def forward(self, states, actions, train=False):
+        states = utils.preprocess_state(states)
         B, T, C, H, W = states.shape
+        if train:
+            embeddings = self.context_encoder(states.reshape(-1, C, H, W)).reshape(B,T,-1) #[s0,....sn]
+            predictions = self.predictor(embeddings[:,:-1].reshape(-1,embeddings.shape[-1]), actions.reshape(-1,2)).reshape(B,T-1,self.repr_dim)
+            return torch.concat([embeddings[:,0].unsqueeze(1),predictions],dim=1)
         s0 = self.context_encoder(states[:,0]) 
         predicted_embeddings = [s0.unsqueeze(1)]
         embed = s0
         for i in range(actions.shape[1]):
             embed = self.predictor(embed,actions[:,i])
             predicted_embeddings.append(embed.unsqueeze(1))
-        pred = torch.concat(embed,dim=1)
+        pred = torch.concat(predicted_embeddings,dim=1)
         return pred
 
 class Prober(torch.nn.Module):

@@ -11,6 +11,13 @@ def preprocess_img(img):
     superimposed_img = torch.max(img,dim=0).values # (B,1,H,W)
     return convert_rgb(superimposed_img.unsqueeze(0))
 
+def preprocess_state(state):
+    """
+    state: (B,T,2,H,W)
+    """
+    superimposed_img = torch.max(state,dim=2).values # (B,T,1,H,W)
+    return convert_rgb(superimposed_img.unsqueeze(2))
+
 def freeze_param(model):
     for param in model.parameters():
             param.requires_grad = False
