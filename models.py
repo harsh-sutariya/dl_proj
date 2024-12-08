@@ -58,6 +58,7 @@ class ViTEncoder(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.vit = models.VisionTransformer(image_size=65,patch_size=5,num_layers=12,num_heads=12, hidden_dim=768, mlp_dim=3072)
+        self.vit.conv_proj = nn.Conv2d(2,768,kernel_size=(5,5), stride=(5,5))
         
     def forward(self, x):
         x = self.vit._process_input(x)
@@ -77,6 +78,7 @@ class ResNetEncoder(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.enc = models.resnet50()
+        self.enc.conv1 = nn.Conv2d(2,64, kernel_size=(7,7), padding=(3,3), bias=False)
         self.enc = nn.Sequential(*(list(self.enc.children())[:-1]))
     def forward(self, x):
         return self.enc(x).reshape(x.shape[0],-1)
@@ -142,7 +144,7 @@ class JEPA(nn.Module):
         self.predictor = Predictor(self.repr_dim).to(device)
 
     def forward(self, states, actions, train=False):
-        states = utils.preprocess_state(states)
+        # states = utils.preprocess_state(states)
         B, T, C, H, W = states.shape
         if train:
             embeddings = self.context_encoder(states.reshape(-1, C, H, W)).reshape(B,T,-1) #[s0,....sn]

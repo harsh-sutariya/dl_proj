@@ -11,6 +11,7 @@ import wandb
 import utils
 import time
 import os
+import schedulers
 
 def get_device():
     """Check for GPU availability."""
@@ -24,36 +25,44 @@ def main(args):
         start_time = time.time()
         device = get_device()
         utils.seed_numpy(args.seed)
-        utils.seed_torch(args.seed, device)
+        utils.seed_torch(args.seed)
         save_dir = os.path.join("../saved_models",str(start_time))
         os.mkdir(save_dir)
-        data = dataset.ObsDataset(data_path="/scratch/DL24FA/train",device = device)
+        data = dataset.ObsDataset(data_path="/scratch/DL24FA/train")
         print("created dataset")
         dataloader = DataLoader(data,batch_size=args.batch_size,shuffle=True,pin_memory=False, num_workers=args.num_workers)
         encoder = models.Encoder(encoder=args.encoder)
         encoder = encoder.to(device)
         optimizer = optim.Adam(encoder.parameters(),lr=args.lr,weight_decay=args.weight_decay)
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer,args.epoch,1e-5)
         transforms  = v2.RandomChoice([v2.ColorJitter(),v2.GaussianBlur(3),v2.RandomInvert(), v2.RandomAutocontrast()])
+        location_transform = v2.RandomAffine([-90,-60,-30,0,30,60,90],translate=(0.25,0.25),interpolation=v2.InterpolationMode.BICUBIC)
         off_diagonal = (torch.ones((encoder.repr_dim, encoder.repr_dim))-torch.eye(encoder.repr_dim)).to(device)
+        cosine_similarity = nn.CosineSimilarity()
         best_loss = float('inf')
+        wandb.watch(encoder, log="all")
         for epoch in tqdm(range(args.epochs)):
             total_loss = 0
             for idx, img in tqdm(enumerate(dataloader)):
-                img1 = transforms(img)
-                img2 = transforms(img)
+                img1 = transforms(img).to(device)
+                img2 = transforms(img).to(device)
+                img3 = location_transform(img).to(device)
                 embed1 = encoder(img1)
                 embed2 = encoder(img2)
+                embed3 = encoder(img3)
                 normalized_embed1 = (embed1 - embed1.mean(0))/embed1.std(0)
                 normalized_embed2 = (embed2 - embed2.mean(0))/embed2.std(0)
+                selected = embed1 if torch.rand(1) > 0.5 else embed2
+                cos = cosine_similarity(selected, embed3) + 1
                 corr_matrix = torch.matmul(normalized_embed1.T,normalized_embed2)/embed1.shape[0]
                 c_diff = (corr_matrix - torch.eye(encoder.repr_dim).to(device)).pow(2)
                 c_diff *= (off_diagonal*args.lam + torch.eye(encoder.repr_dim).to(device))
-                loss = c_diff.sum()
+                loss = c_diff.sum() + cos.mean()
                 total_loss += loss.item()
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-            wandb.log({"loss":total_loss/len(dataloader)})
+            wandb.log({"loss":total_loss/len(dataloader), "lr": scheduler.get_last_lr()[0], "epoch":epoch})
             if total_loss/len(dataloader) < best_loss:
                 best_loss = total_loss/len(dataloader)
                 torch.save(encoder.state_dict(),
@@ -61,6 +70,7 @@ def main(args):
             print(f"Epoch: {epoch} Loss: {total_loss/len(dataloader)}")
             torch.save(encoder.state_dict(),
                        f'{save_dir}/{args.encoder}_{args.batch_size}_{args.lr}_epoch_{epoch}.pth')
+            scheduler.step()
             
         
     
