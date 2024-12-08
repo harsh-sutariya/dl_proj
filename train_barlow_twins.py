@@ -85,7 +85,7 @@ if __name__=="__main__":
     parser.add_argument("--lam", type=float,default=5e-3)
     parser.add_argument("--encoder",type=str,default="resnet50")
     parser.add_argument("--seed", type=int,default=0)
-    parser.add_argument("--num_workers", type=int, default=4)
+    parser.add_argument("--num_workers", type=int, default=6)
     args = parser.parse_args()
     print(args)
     main(args)
