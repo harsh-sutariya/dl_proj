@@ -74,6 +74,7 @@ def train(args, encoder, rank, world_size, train_loader, optimizer, epoch, sched
         ddp_loss[0] += loss.item()
         ddp_loss[1] += len(img)
         optimizer.zero_grad()
+        print(loss)
         loss.backward()
         optimizer.step()
 
