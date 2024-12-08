@@ -36,7 +36,7 @@ def main(args):
         optimizer = optim.Adam(encoder.parameters(),lr=args.lr,weight_decay=args.weight_decay)
         scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer,args.epochs,1e-5)
         transforms  = v2.RandomChoice([v2.ColorJitter(),v2.GaussianBlur(3),v2.RandomInvert(), v2.RandomAutocontrast()])
-        location_transform = v2.RandomAffine(90,translate=(0.25,0.25),interpolation=v2.InterpolationMode.BICUBIC)
+        location_transform = v2.RandomAffine(90,translate=(0.25,0.25),interpolation=v2.InterpolationMode.BILINEAR)
         off_diagonal = (torch.ones((encoder.repr_dim, encoder.repr_dim))-torch.eye(encoder.repr_dim)).to(device)
         cosine_similarity = nn.CosineSimilarity()
         best_loss = float('inf')
