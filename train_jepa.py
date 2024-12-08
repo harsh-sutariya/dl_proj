@@ -52,8 +52,8 @@ def main(args):
             for idx, d in tqdm(enumerate(train_dataloader)):
                 pred_embed = jepa(states=d.states,actions=d.actions,train=True)
                 # processed_state = utils.preprocess_state(d.states)
-                B,T,C,H,W = processed_state.shape
-                actual_embed = target_encoder(processed_state.reshape(-1,C,H,W)).reshape(B,T,-1)
+                B,T,C,H,W = d.states.shape
+                actual_embed = target_encoder(d.states.reshape(-1,C,H,W)).reshape(B,T,-1)
                 loss = D_cost(pred_embed[:,1:],actual_embed[:,1:]).sum(1).mean()
                 optimizer.zero_grad()
                 loss.backward()
@@ -66,9 +66,9 @@ def main(args):
             with torch.no_grad():
                 for idx, d in tqdm(enumerate(val_dataloader)):
                     pred_embed = jepa(states=d.states,actions=d.actions)
-                    processed_state = utils.preprocess_state(d.states)
-                    B,T,C,H,W = processed_state.shape
-                    actual_embed = target_encoder(processed_state.reshape(-1,C,H,W)).reshape(B,T,-1)
+                    # d.states = utils.preprocess_state(d.states)
+                    B,T,C,H,W = d.states.shape
+                    actual_embed = target_encoder(d.states.reshape(-1,C,H,W)).reshape(B,T,-1)
                     loss = D_cost(pred_embed[:,1:],actual_embed[:,1:]).sum(1).mean()
                     total_loss += loss.item()
                 print(f'Val Loss: {total_loss/(idx+1)} Epoch: {epoch}')
