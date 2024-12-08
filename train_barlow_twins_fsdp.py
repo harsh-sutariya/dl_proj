@@ -121,7 +121,11 @@ def main(args):
         utils.seed_torch(args.seed)
         save_dir = os.path.join("../saved_models",str(start_time))
         os.mkdir(save_dir)
-        
+        WORLD_SIZE = torch.cuda.device_count()
+        mp.spawn(fsdp_main,
+            args=(WORLD_SIZE, args),
+            nprocs=WORLD_SIZE,
+            join=True)
         
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
