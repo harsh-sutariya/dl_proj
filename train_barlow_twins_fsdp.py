@@ -31,6 +31,7 @@ import dataset
 import utils
 from torch.utils.data import DataLoader
 import models
+from tqdm import tqdm
 
 t1 = v2.ColorJitter()
 t2 = v2.GaussianBlur(3)
@@ -54,7 +55,7 @@ def train(args, encoder, rank, world_size, train_loader, optimizer, epoch, sched
     ddp_loss = torch.zeros(2).to(rank)
     if sampler:
         sampler.set_epoch(epoch)
-    for idx, img in enumerate(train_loader):
+    for idx, img in tqdm(enumerate(train_loader)):
         img1 = t1(img).to(rank)
         img2 = t2(img).to(rank)
         embed1 = encoder(img1)
