@@ -35,7 +35,9 @@ def main(args):
         encoder = encoder.to(device)
         optimizer = optim.Adam(encoder.parameters(),lr=args.lr,weight_decay=args.weight_decay)
         scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer,args.epochs,1e-5)
-        transforms  = v2.RandomChoice([v2.ColorJitter(),v2.GaussianBlur(3),v2.RandomInvert(), v2.RandomAutocontrast()])
+        # transforms  = v2.RandomChoice([v2.ColorJitter(),v2.GaussianBlur(3)])
+        t1 = v2.ColorJitter()
+        t2 = v2.GaussianBlur(3)
         location_transform = v2.RandomAffine(90,translate=(0.25,0.25),interpolation=v2.InterpolationMode.BILINEAR)
         off_diagonal = (torch.ones((encoder.repr_dim, encoder.repr_dim))-torch.eye(encoder.repr_dim)).to(device)
         cosine_similarity = nn.CosineSimilarity()
@@ -44,8 +46,8 @@ def main(args):
         for epoch in tqdm(range(args.epochs)):
             total_loss = 0
             for idx, img in tqdm(enumerate(dataloader)):
-                img1 = transforms(img).to(device)
-                img2 = transforms(img).to(device)
+                img1 = t1(img).to(device)
+                img2 = t2(img).to(device)
                 img3 = location_transform(img).to(device)
                 embed1 = encoder(img1)
                 embed2 = encoder(img2)
