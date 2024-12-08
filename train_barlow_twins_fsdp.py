@@ -90,7 +90,7 @@ def train(args, encoder, rank, world_size, train_loader, optimizer, epoch, sched
         
 def fsdp_main(rank, world_size, args):
     setup(rank, world_size)
-    data = dataset.ObsDataset(data_path="/scratch/DL24FA/train",device = rank)
+    data = dataset.ObsDataset(data_path="/scratch/DL24FA/train")
     sampler = DistributedSampler(data, rank=rank, num_replicas=world_size, shuffle=True)
     dataloader = DataLoader(data,batch_size=args.batch_size,shuffle=False,pin_memory=True, num_workers=args.num_workers)
     # my_auto_wrap_policy = functools.partial(
