@@ -64,14 +64,14 @@ def train(args, encoder, rank, world_size, train_loader, optimizer, epoch, sched
         img3 = location_transform(img).to(rank)
         normalized_embed1 = (embed1 - embed1.mean(0))/embed1.std(0)
         normalized_embed2 = (embed2 - embed2.mean(0))/embed2.std(0)
-        selected = embed1 if torch.rand(1) > 0.5 else embed2
+        selected = embed1 if torch.rand(1) > 0.5 else embed2    
         cos = cosine_similarity(selected, embed3) + 1
         corr_matrix = torch.matmul(normalized_embed1.T,normalized_embed2)/embed1.shape[0]
         c_diff = (corr_matrix - torch.eye(encoder.repr_dim).to(rank)).pow(2)
         off_diagonal = (torch.ones((encoder.repr_dim, encoder.repr_dim))-torch.eye(encoder.repr_dim)).to(rank)
         c_diff *= (off_diagonal*args.lam + torch.eye(encoder.repr_dim).to(rank))
         loss = c_diff.sum() + cos.mean()
-        ddp_loss[0] += loss
+        ddp_loss[0] += loss.item()
         ddp_loss[1] += len(img)
         optimizer.zero_grad()
         loss.backward()

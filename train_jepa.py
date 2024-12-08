@@ -26,7 +26,7 @@ def main(args):
         start_time = time.time()
         device = get_device()
         utils.seed_numpy(args.seed)
-        utils.seed_torch(args.seed, device)
+        utils.seed_torch(args.seed)
         save_dir = os.path.join("../jepa_models",str(start_time))
         os.makedirs(save_dir)
         data = dataset.WallDataset(
