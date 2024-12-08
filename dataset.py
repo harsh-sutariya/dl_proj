@@ -42,8 +42,7 @@ class WallDataset:
 
 
 class ObsDataset(torch.utils.data.Dataset):
-    def __init__(self, data_path, device):
-        # self.device = device
+    def __init__(self, data_path):
         self.images = np.load(f'{data_path}/states.npy', mmap_mode="r")
         _,_,C,H,W = self.images.shape
         self.images = self.images.reshape(-1,C,H,W)
