@@ -3,7 +3,7 @@ import numpy as np
 from torch import nn
 from torch.nn import functional as F
 import torch
-
+from timm import create_model
 
 def build_mlp(layers_dims: List[int]):
     layers = []
@@ -66,3 +66,125 @@ class Prober(torch.nn.Module):
     def forward(self, e):
         output = self.prober(e)
         return output
+
+
+class Encoder(nn.Module):
+
+    def __init__(self):
+
+        super(Encoder, self).__init__()
+
+        self.ViT = create_model("vit_base_patch16_224", pretrained=False, img_size=65, in_chans=2, num_classes=0)
+        
+        self.head = nn.Sequential(
+            nn.Linear(768, 512),
+            nn.ReLU(),
+            nn.Linear(512, 768)
+        )
+
+    def forward(self, x):
+        
+        x = self.ViT(x)
+        x = self.head(x)
+        return x
+                                                                     
+class Predictor(nn.Module):
+    
+    def __init__(self):
+
+        super(Predictor, self).__init__()
+
+        self.network = nn.Sequential(
+            nn.Linear(770, 768),
+            nn.BatchNorm1d(768),
+            nn.ReLU(),
+            nn.Linear(768, 768)
+        )
+
+    def forward(self, x):
+        
+        return self.network(x)
+
+class JEPA(nn.Module):
+
+    def __init__(self, inference):
+        
+        super(JEPA, self).__init__()
+
+        self.encoder = Encoder()
+        self.predictor = Predictor()
+        self.target_encoder = Encoder()
+        self.inference = inference
+
+    def forward(self, states, actions):
+
+        # States: [B, T, CH, H, W]
+        # Actions: [B, T - 1, 2]
+
+        B, T, _, _, _ = states.shape
+        num_transitions = actions.shape[1]
+        initial_state = states[:, 0]
+        inference = self.inference
+        
+        if inference == False:
+            
+            # -------------------------------------------------------------------------------------------------------- Enc(theta) [Encoder]
+
+            current_state_representation = self.encoder(initial_state)
+            # Encoder Input: initial_state = states[:, 0] -> [B, CH, H, W] (First Time-Step)
+            # Encoder Output: [B, D]
+
+            # -------------------------------------------------------------------------------------------------------- Pred(phi) [Predictor]
+
+            predicted_states = []
+
+            for t in range(num_transitions):
+                action_at_time_t = actions[:, t]
+                predictor_input = torch.cat([current_state_representation, action_at_time_t], dim=-1)
+                next_state_representation = self.predictor(predictor_input)
+                predicted_states.append(next_state_representation)
+                current_state_representation = next_state_representation
+
+            predicted_states = torch.stack(predicted_states, dim=1)
+            # Predictor Input: action_at_time_t = actions[:, t] -> [B, 2] & STATE_REP -> [B, D] || Concat: [B, D + 2]
+            # Predictor Output: [B, D]
+            # Predicted State List: T - 1 * [B, D]
+            # Predicted States: [B, T - 1, D]
+            
+            # -------------------------------------------------------------------------------------------------------- Enc(psi) [Target Encoder]
+
+            target_representation = []
+
+            for t in range(T):
+                state_at_time_t = states[:, t]
+                target_representation.append(self.target_encoder(state_at_time_t))
+            target_states = target_representation[1:]
+            target_states = torch.stack(target_states, dim=1)
+            
+            # Target Encoder Input: states[:, t] [B, CH, H, W] (t Time-Step)
+            # Target Encoder Output: [B, D]
+            # Target Rep List: T * [B, D]
+            # Target States: [B, T - 1, D]
+
+            return predicted_states, target_states
+        
+        else:
+            
+            # -------------------------------------------------------------------------------------------------------- Enc(theta) [Trained Encoder]
+
+            current_state_representation = self.encoder(initial_state)
+
+            # -------------------------------------------------------------------------------------------------------- Pred(phi) [Trained Predictor]
+
+            predicted_states = []
+
+            for t in range(num_transitions):
+                action_at_time_t = actions[:, t]
+                predictor_input = torch.cat([current_state_representation, action_at_time_t], dim=-1)
+                next_state_representation = self.predictor(predictor_input)
+                predicted_states.append(next_state_representation)
+                current_state_representation = next_state_representation
+            
+            predicted_states = torch.stack(predicted_states, dim=1)
+            
+            return predicted_states
