@@ -60,8 +60,8 @@ def train(args, encoder, rank, world_size, train_loader, optimizer, epoch, sched
         img2 = t2(img).to(rank)
         embed1 = encoder(img1)
         embed2 = encoder(img2)
-        embed3 = encoder(img3)
         img3 = location_transform(img).to(rank)
+        embed3 = encoder(img3)
         normalized_embed1 = (embed1 - embed1.mean(0))/embed1.std(0)
         normalized_embed2 = (embed2 - embed2.mean(0))/embed2.std(0)
         selected = embed1 if torch.rand(1) > 0.5 else embed2    
