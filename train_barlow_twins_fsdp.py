@@ -14,16 +14,16 @@ import torch.distributed as dist
 import torch.multiprocessing as mp
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data.distributed import DistributedSampler
-from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
-from torch.distributed.fsdp.fully_sharded_data_parallel import (
-    CPUOffload,
-    BackwardPrefetch,
-)
-from torch.distributed.fsdp.wrap import (
-    size_based_auto_wrap_policy,
-    enable_wrap,
-    wrap,
-)
+# from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+# from torch.distributed.fsdp.fully_sharded_data_parallel import (
+#     CPUOffload,
+#     BackwardPrefetch,
+# )
+# from torch.distributed.fsdp.wrap import (
+#     size_based_auto_wrap_policy,
+#     enable_wrap,
+#     wrap,
+# )
 import wandb
 import time
 import torchvision.transforms.v2 as v2
@@ -74,15 +74,14 @@ def train(args, encoder, rank, world_size, train_loader, optimizer, epoch, sched
         ddp_loss[0] += loss.item()
         ddp_loss[1] += len(img)
         optimizer.zero_grad()
-        print(loss)
         loss.backward()
         optimizer.step()
 
-    dist.all_reduce(ddp_loss, op=dist.ReduceOp.SUM)
+    dist.barrier()
     if rank == 0:
+        dist.all_reduce(ddp_loss, op=dist.ReduceOp.SUM)
         wandb.log({"loss":ddp_loss[0] / ddp_loss[1], "epoch":epoch, "lr": scheduler.get_last_lr()[0]})
         print('Train Epoch: {} \tLoss: {:.6f}'.format(epoch, ddp_loss[0] / ddp_loss[1]))
-        dist.barrier()
         if best_loss > ddp_loss[0] / ddp_loss[1]:
             best_loss = ddp_loss[0] / ddp_loss[1]
             torch.save(encoder.state_dict(),
@@ -90,11 +89,11 @@ def train(args, encoder, rank, world_size, train_loader, optimizer, epoch, sched
         torch.save(encoder.state_dict(),
                        f'{save_dir}/{args.encoder}_{args.batch_size}_{args.lr}_epoch_{epoch}.pth')
         
-def fsdp_main(rank, world_size, args):
+def ddp(rank, world_size, args):
     setup(rank, world_size)
     data = dataset.ObsDataset(data_path="/scratch/DL24FA/train")
     sampler = DistributedSampler(data, rank=rank, num_replicas=world_size, shuffle=True)
-    dataloader = DataLoader(data,batch_size=args.batch_size,shuffle=False,pin_memory=True, num_workers=args.num_workers)
+    dataloader = DataLoader(data,batch_size=args.batch_size,shuffle=False,pin_memory=False)
     # my_auto_wrap_policy = functools.partial(
     #     size_based_auto_wrap_policy, min_num_params=100
     # )
@@ -105,7 +104,7 @@ def fsdp_main(rank, world_size, args):
     init_end_event = torch.cuda.Event(enable_timing=True)
     
     encoder = models.Encoder(args.encoder).to(rank)
-    encoder = FSDP(encoder)
+    encoder = DDP(encoder, device_ids=[rank], output_device=rank, find_unused_parameters=True)
     optimizer = optim.Adam(encoder.parameters(),lr=args.lr,weight_decay=args.weight_decay)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer,args.epochs,1e-5)
     init_start_event.record()
@@ -124,7 +123,7 @@ def main(args):
         save_dir = os.path.join("../saved_models",str(start_time))
         os.mkdir(save_dir)
         WORLD_SIZE = torch.cuda.device_count()
-        mp.spawn(fsdp_main,
+        mp.spawn(ddp,
             args=(WORLD_SIZE, args),
             nprocs=WORLD_SIZE,
             join=True)
@@ -138,7 +137,6 @@ if __name__=="__main__":
     parser.add_argument("--lam", type=float,default=5e-3)
     parser.add_argument("--encoder",type=str,default="resnet50")
     parser.add_argument("--seed", type=int,default=0)
-    parser.add_argument("--num_workers", type=int, default=6)
     args = parser.parse_args()
     print(args)
     main(args)
