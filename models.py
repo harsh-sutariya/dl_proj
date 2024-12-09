@@ -180,3 +180,7 @@ class Prober(torch.nn.Module):
         layers.append(torch.nn.Linear(f[-2], f[-1]))
         self.prober = torch.nn.Sequential(*layers)
 
+    def forward(self, e):
+        output = self.prober(e)
+        return output
+
