@@ -55,7 +55,7 @@ def main(args):
                 normalized_embed1 = (embed1 - embed1.mean(0))/embed1.std(0)
                 normalized_embed2 = (embed2 - embed2.mean(0))/embed2.std(0)
                 selected = embed1 if torch.rand(1) > 0.5 else embed2
-                cos = cosine_similarity(selected, embed3) + 1
+                cos = torch.maximum(cosine_similarity(selected, embed3) + 1, torch.tensor([args.margin]*embed1.shape[0]))
                 corr_matrix = torch.matmul(normalized_embed1.T,normalized_embed2)/embed1.shape[0]
                 c_diff = (corr_matrix - torch.eye(encoder.repr_dim).to(device)).pow(2)
                 c_diff *= (off_diagonal*args.lam + torch.eye(encoder.repr_dim).to(device))
@@ -86,6 +86,7 @@ if __name__=="__main__":
     parser.add_argument("--encoder",type=str,default="resnet50")
     parser.add_argument("--seed", type=int,default=0)
     parser.add_argument("--num_workers", type=int, default=6)
+    parser.add_argument("--margin", type=float, default=0.0)
     args = parser.parse_args()
     print(args)
     main(args)
