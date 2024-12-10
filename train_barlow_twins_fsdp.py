@@ -113,7 +113,7 @@ def ddp(rank, world_size, args):
     init_end_event = torch.cuda.Event(enable_timing=True)
     
     encoder = models.Encoder(args.encoder).to(rank)
-    encoder = DDP(encoder, device_ids=[rank], output_device=rank)
+    encoder = DDP(encoder, device_ids=[rank], output_device=rank, find_unused_parameters=True)
     optimizer = optim.Adam(encoder.parameters(),lr=args.lr,weight_decay=args.weight_decay)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer,args.epochs,1e-5)
     init_start_event.record()
