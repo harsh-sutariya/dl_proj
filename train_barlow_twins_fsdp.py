@@ -70,7 +70,7 @@ def train(args, encoder, rank, world_size, train_loader, optimizer, epoch, sched
             img3 = location_transform(img2)
             selected = embed2
         embed3 = encoder(img3)
-        cos = torch.clamp(cosine_similarity(selected, embed3) + 1,min=torch.tensor(args.margin))
+        cos = torch.clamp(cosine_similarity(selected, embed3) + 1,min=torch.tensor(args.margin).to(rank))
         corr_matrix = torch.matmul(normalized_embed1.T,normalized_embed2)/embed1.shape[0]
         c_diff = (corr_matrix - torch.eye(embed1.shape[1]).to(rank)).pow(2)
         off_diagonal = (torch.ones((embed1.shape[1], embed1.shape[1]))-torch.eye(embed1.shape[1])).to(rank)
