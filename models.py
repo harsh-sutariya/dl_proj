@@ -45,13 +45,15 @@ class MockModel(torch.nn.Module):
 class Predictor(torch.nn.Module):
     def __init__(self, repr_dim):
         super().__init__()
-        self.bl = nn.Bilinear(repr_dim,2,repr_dim*2)
+        self.bl = nn.Bilinear(repr_dim,2,repr_dim*4)
         self.relu = nn.ReLU()
-        self.linear = nn.Linear(repr_dim*2,repr_dim)
+        self.block1 = nn.Sequential(nn.Linear(repr_dim*4,repr_dim*2), nn.ReLU(),nn.Linear(repr_dim*2, repr_dim*4))
+        self.block2 = nn.Sequential(nn.Linear(repr_dim*4,repr_dim*2), nn.ReLU(),nn.Linear(repr_dim*2, repr_dim*4))
     def forward(self, embed, action):
         new_embed = self.bl(embed,action)
         new_embed = self.relu(new_embed)
-        new_embed = self.linear(new_embed)
+        new_embed = self.block1(new_embed)
+        new_embed = self.block2(new_embed) + new_embed
         return new_embed
     
 class ViTEncoder(torch.nn.Module):
