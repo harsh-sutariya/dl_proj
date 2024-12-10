@@ -49,12 +49,14 @@ class Predictor(torch.nn.Module):
         self.relu = nn.ReLU()
         self.block1 = nn.Sequential(nn.Linear(repr_dim*4,repr_dim*2), nn.ReLU(),nn.Linear(repr_dim*2, repr_dim*4))
         self.block2 = nn.Sequential(nn.Linear(repr_dim*4,repr_dim*2), nn.ReLU(),nn.Linear(repr_dim*2, repr_dim*4))
+        self.linear = nn.Linear(repr_dim*4,repr_dim)
     def forward(self, embed, action):
         new_embed = self.bl(embed,action)
         new_embed = self.relu(new_embed)
         new_embed = self.block1(new_embed)
         new_embed = self.block2(new_embed) + new_embed
-        return new_embed
+        next_embed = self.linear(new_embed)
+        return next_embed
     
 class ViTEncoder(torch.nn.Module):
     def __init__(self):
