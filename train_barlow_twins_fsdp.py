@@ -52,7 +52,7 @@ def cleanup():
 
 def train(args, encoder, rank, world_size, train_loader, optimizer, epoch, scheduler, sampler=None):
     encoder.train()
-    ddp_loss = torch.zeros(2).to(rank)
+    ddp_loss = torch.zeros(4).to(rank)
     if sampler:
         sampler.set_epoch(epoch)
     for idx, img in tqdm(enumerate(train_loader)):
@@ -60,17 +60,26 @@ def train(args, encoder, rank, world_size, train_loader, optimizer, epoch, sched
         img2 = t2(img).to(rank)
         embed1 = encoder(img1)
         embed2 = encoder(img2)
-        img3 = location_transform(img).to(rank)
-        embed3 = encoder(img3)
         normalized_embed1 = (embed1 - embed1.mean(0))/embed1.std(0)
         normalized_embed2 = (embed2 - embed2.mean(0))/embed2.std(0)
-        selected = embed1 if torch.rand(1) > 0.5 else embed2    
-        cos = cosine_similarity(selected, embed3) + 1
-        corr_matrix = torch.matmul(normalized_embed1.T,normalized_embed2)/embed1.shape[0] 
+        selected = embed1 if torch.rand(1) > 0.5 else embed2
+        if torch.rand > 0.5:
+            img3 = location_transform(img1)
+            selected = embed1
+        else:
+            img3 = location_transform(img2)
+            selected = embed2
+        embed3 = encoder(img3)
+        cos = torch.maximum(cosine_similarity(selected, embed3) + 1, torch.tensor([args.margin]*embed1.shape[0]))
+        corr_matrix = torch.matmul(normalized_embed1.T,normalized_embed2)/embed1.shape[0]
         c_diff = (corr_matrix - torch.eye(embed1.shape[1]).to(rank)).pow(2)
         off_diagonal = (torch.ones((embed1.shape[1], embed1.shape[1]))-torch.eye(embed1.shape[1])).to(rank)
         c_diff *= (off_diagonal*args.lam + torch.eye(embed1.shape[1]).to(rank))
-        loss = c_diff.sum() + cos.mean()
+        bt_l = c_diff.sum()
+        contr_l = cos.mean()
+        loss = bt_l+ contr_l
+        ddp_loss[2] += bt_l.item()
+        ddp_loss[3]+= contr_l.item()
         ddp_loss[0] += loss.item()
         ddp_loss[1] += len(img)
         optimizer.zero_grad()
@@ -80,7 +89,7 @@ def train(args, encoder, rank, world_size, train_loader, optimizer, epoch, sched
     dist.barrier()
     if rank == 0:
         dist.all_reduce(ddp_loss, op=dist.ReduceOp.SUM)
-        wandb.log({"loss":ddp_loss[0] / ddp_loss[1], "epoch":epoch, "lr": scheduler.get_last_lr()[0]})
+        wandb.log({"loss":ddp_loss[0] / ddp_loss[1], "epoch":epoch, "lr": scheduler.get_last_lr()[0], "bt_loss": ddp_loss[2] / ddp_loss[1], "contrastive_loss":ddp_loss[3] / ddp_loss[1]})
         print('Train Epoch: {} \tLoss: {:.6f}'.format(epoch, ddp_loss[0] / ddp_loss[1]))
         if best_loss > ddp_loss[0] / ddp_loss[1]:
             best_loss = ddp_loss[0] / ddp_loss[1]
