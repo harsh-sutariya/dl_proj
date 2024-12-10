@@ -62,7 +62,7 @@ def main(args):
                     img3 = location_transform(img2)
                     selected = embed2
                 embed3 = encoder(img3)
-                cos = nn.CosineEmbeddingLoss(margin=args.margin)(selected, embed3, torch.ones(selected.shape[0], device=rank)*-1)
+                cos = nn.CosineEmbeddingLoss(margin=args.margin)(selected, embed3, torch.ones(selected.shape[0], device=device)*-1)
                 corr_matrix = torch.matmul(normalized_embed1.T,normalized_embed2)/embed1.shape[0]
                 c_diff = (corr_matrix - torch.eye(encoder.repr_dim).to(device)).pow(2)
                 c_diff *= (off_diagonal*args.lam + torch.eye(encoder.repr_dim).to(device))
