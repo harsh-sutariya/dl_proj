@@ -45,9 +45,9 @@ class MockModel(torch.nn.Module):
 class Predictor(torch.nn.Module):
     def __init__(self, repr_dim):
         super().__init__()
-        self.bl = nn.Bilinear(repr_dim,2,repr_dim//4)
+        self.bl = nn.Bilinear(repr_dim,2,repr_dim*2)
         self.relu = nn.ReLU()
-        self.linear = nn.Linear(repr_dim//4,repr_dim)
+        self.linear = nn.Linear(repr_dim*2,repr_dim)
     def forward(self, embed, action):
         new_embed = self.bl(embed,action)
         new_embed = self.relu(new_embed)

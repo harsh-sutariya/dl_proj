@@ -45,31 +45,42 @@ def main(args):
         wandb.watch(encoder, log="all")
         for epoch in tqdm(range(args.epochs)):
             total_loss = 0
+            bt_loss = 0
+            contrastive_loss = 0
             for idx, img in tqdm(enumerate(dataloader)):
                 img1 = t1(img).to(device)
                 img2 = t2(img).to(device)
-                img3 = location_transform(img).to(device)
                 embed1 = encoder(img1)
                 embed2 = encoder(img2)
-                embed3 = encoder(img3)
                 normalized_embed1 = (embed1 - embed1.mean(0))/embed1.std(0)
                 normalized_embed2 = (embed2 - embed2.mean(0))/embed2.std(0)
                 selected = embed1 if torch.rand(1) > 0.5 else embed2
+                if torch.rand > 0.5:
+                    img3 = location_transform(img1)
+                    selected = embed1
+                else:
+                    img3 = location_transform(img2)
+                    selected = embed2
+                embed3 = encoder(img3)
                 cos = torch.maximum(cosine_similarity(selected, embed3) + 1, torch.tensor([args.margin]*embed1.shape[0]))
                 corr_matrix = torch.matmul(normalized_embed1.T,normalized_embed2)/embed1.shape[0]
                 c_diff = (corr_matrix - torch.eye(encoder.repr_dim).to(device)).pow(2)
                 c_diff *= (off_diagonal*args.lam + torch.eye(encoder.repr_dim).to(device))
-                loss = c_diff.sum() + cos.mean()
+                bt_l = c_diff.sum()
+                contr_l = cos.mean()
+                loss = bt_l+ contr_l
+                bt_loss += bt_l.item()
+                contrastive_loss+= contr_l.item()
                 total_loss += loss.item()
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-            wandb.log({"loss":total_loss/len(dataloader), "lr": scheduler.get_last_lr()[0], "epoch":epoch})
+            wandb.log({"loss":total_loss/len(dataloader), "lr": scheduler.get_last_lr()[0], "epoch":epoch, "bt_loss": bt_loss/len(dataloader), "contrastive_loss":contrastive_loss/len(dataloader)})
             if total_loss/len(dataloader) < best_loss:
                 best_loss = total_loss/len(dataloader)
                 torch.save(encoder.state_dict(),
                            f'{save_dir}/{args.encoder}_{args.batch_size}_{args.lr}_best_model.pth')
-            print(f"Epoch: {epoch} Loss: {total_loss/len(dataloader)}")
+            print(f"Epoch: {epoch} Loss: {total_loss/len(dataloader)} Barlow Twins: {bt_loss/len(dataloader)} Contrastive Loss:{contrastive_loss/len(dataloader)}")
             torch.save(encoder.state_dict(),
                        f'{save_dir}/{args.encoder}_{args.batch_size}_{args.lr}_epoch_{epoch}.pth')
             scheduler.step()
