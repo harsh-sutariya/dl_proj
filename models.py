@@ -186,5 +186,7 @@ class JEPA(nn.Module):
                 current_state_representation = next_state_representation
             
             predicted_states = torch.stack(predicted_states, dim=1)
+            initial_state_representation = self.encoder(initial_state).unsqueeze(1)
+            all_states = torch.cat([initial_state_representation, predicted_states], dim=1)
             
-            return predicted_states
+            return all_states
