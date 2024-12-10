@@ -115,6 +115,7 @@ class JEPA(nn.Module):
         self.predictor = Predictor()
         self.target_encoder = Encoder()
         self.inference = inference
+        self.repr_dim = 768
 
     def forward(self, states, actions):
 
