@@ -83,7 +83,7 @@ def train(args, encoder, rank, world_size, train_loader, optimizer, epoch, sched
         ddp_loss[0] += loss.item()
         ddp_loss[1] += len(img)
         optimizer.zero_grad()
-        loss.backward(retain_graph=True)
+        loss.backward()
         optimizer.step()
 
     dist.barrier()
@@ -113,7 +113,7 @@ def ddp(rank, world_size, args):
     init_end_event = torch.cuda.Event(enable_timing=True)
     
     encoder = models.Encoder(args.encoder).to(rank)
-    encoder = DDP(encoder, device_ids=[rank], output_device=rank, find_unused_parameters=True)
+    encoder = DDP(encoder, device_ids=[rank], output_device=rank)
     optimizer = optim.Adam(encoder.parameters(),lr=args.lr,weight_decay=args.weight_decay)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer,args.epochs,1e-5)
     init_start_event.record()
@@ -132,6 +132,7 @@ def main(args):
         save_dir = os.path.join("../saved_models",str(start_time))
         os.mkdir(save_dir)
         WORLD_SIZE = torch.cuda.device_count()
+        torch.autograd.set_detect_anomaly(True)
         mp.spawn(ddp,
             args=(WORLD_SIZE, args),
             nprocs=WORLD_SIZE,
