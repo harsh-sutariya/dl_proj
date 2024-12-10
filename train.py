@@ -31,7 +31,8 @@ def distance(predictions, targets):
 
     # Covariance Regularization
     z = predictions - predictions.mean(dim=0)
-    covariance_matrix = (z.T @ z) / (z.size(0) - 1)
+    # covariance_matrix = (z.T @ z) / (z.size(0) - 1)
+    covariance_matrix = (z.permute(1, 0) @ z) / (z.size(0) - 1)
     off_diagonal_loss = torch.sum(covariance_matrix ** 2) - torch.sum(torch.diag(covariance_matrix) ** 2)
 
     vicreg_loss = invariance_loss + 0.1 * variance_regularization + 0.005 * off_diagonal_loss
