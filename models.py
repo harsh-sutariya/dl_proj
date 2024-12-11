@@ -47,14 +47,14 @@ class Predictor(torch.nn.Module):
         super().__init__()
         self.bl = nn.Bilinear(repr_dim,2,repr_dim*4)
         self.relu = nn.ReLU()
-        self.block1 = nn.Sequential(nn.Linear(repr_dim*4,repr_dim*2), nn.ReLU(),nn.Linear(repr_dim*2, repr_dim*4))
-        self.block2 = nn.Sequential(nn.Linear(repr_dim*4,repr_dim*2), nn.ReLU(),nn.Linear(repr_dim*2, repr_dim*4))
+        # self.block1 = nn.Sequential(nn.Linear(repr_dim*4,repr_dim*2), nn.ReLU(),nn.Linear(repr_dim*2, repr_dim*4))
+        # self.block2 = nn.Sequential(nn.Linear(repr_dim*4,repr_dim*2), nn.ReLU(),nn.Linear(repr_dim*2, repr_dim*4))
         self.linear = nn.Linear(repr_dim*4,repr_dim)
     def forward(self, embed, action):
         new_embed = self.bl(embed,action)
         new_embed = self.relu(new_embed)
-        new_embed = self.block1(new_embed)
-        new_embed = self.block2(new_embed) + new_embed
+        # new_embed = self.block1(new_embed)
+        # new_embed = self.block2(new_embed) + new_embed
         next_embed = self.linear(new_embed)
         return next_embed
     
@@ -135,7 +135,7 @@ class Baseline(torch.nn.Module):
             return torch.concat(predicted_embeddings,dim=1),embeddings
                 
 class JEPA(nn.Module):
-    def __init__(self, encoder="resnet50", device = "cuda", context_encoder_path=None, freeze_encoder=True):
+    def __init__(self, encoder="resnet50", device = "cuda", context_encoder_path=None, freeze_encoder=False):
         super().__init__()
         self.device = device
         self.context_encoder = Encoder(encoder)
