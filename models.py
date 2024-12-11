@@ -61,15 +61,17 @@ class Predictor(torch.nn.Module):
 class Predictor_cross(torch.nn.Module):
     def __init__(self, repr_dim):
         super().__init__()
-        self.action_embed = nn.Sequential(nn.Linear(2,repr_dim//2), nn.ReLU(),nn.Linear(repr_dim//2,repr_dim//2))
-        self.mhsa = torch.nn.MultiheadAttention(repr_dim//2,num_heads=4,kdim=repr_dim,vdim=repr_dim, batch_first=True)
-        self.linear = nn.Sequential(nn.Linear(repr_dim//2, repr_dim*2), nn.ReLU(), nn.LayerNorm(repr_dim*2), torch.nn.Linear(repr_dim*2, repr_dim))
-        self.norm1 = nn.LayerNorm(repr_dim//2)
+        self.action_embed = nn.Sequential(nn.Linear(2,repr_dim//2), nn.ReLU(),nn.Linear(repr_dim//2,repr_dim))
+        self.mhsa = torch.nn.MultiheadAttention(repr_dim,num_heads=8,kdim=repr_dim,vdim=repr_dim, batch_first=True)
+        self.linear = nn.Sequential(nn.Linear(repr_dim, repr_dim*2), nn.ReLU(), torch.nn.Linear(repr_dim*2, repr_dim))
+        self.norm1 = nn.LayerNorm(repr_dim)
+        self.norm2 = nn.LayerNorm(repr_dim)
 
     def forward(self, embed, action):
-        action_embed = self.action_embed(action)
-        mhsa = self.norm1(self.mhsa(action_embed, embed, embed))
-        next_embed = self.linear(mhsa)
+        action_embed = self.action_embed(action) # B, 1024
+        mhsa, _ = self.mhsa(action_embed, embed, embed) # B, 1024
+        norm_mhsa = self.norm1(mhsa+action_embed) # B, 1024
+        next_embed = self.norm2(self.linear(norm_mhsa)+norm_mhsa)
         return next_embed
 class ViTEncoder(torch.nn.Module):
     def __init__(self):
