@@ -57,7 +57,20 @@ class Predictor(torch.nn.Module):
         # new_embed = self.block2(new_embed) + new_embed
         next_embed = self.linear(new_embed)
         return next_embed
-    
+
+class Predictor_cross(torch.nn.Module):
+    def __init__(self, repr_dim):
+        super().__init__()
+        self.action_embed = nn.Sequential(nn.Linear(2,repr_dim//2), nn.ReLU(),nn.Linear(repr_dim//2,repr_dim//2))
+        self.mhsa = torch.nn.MultiheadAttention(repr_dim//2,num_heads=4,kdim=repr_dim,vdim=repr_dim)
+        self.linear = nn.Sequential(nn.Linear(repr_dim//2, repr_dim*2), nn.ReLU(), nn.LayerNorm(repr_dim*2), torch.nn.Linear(repr_dim*2, repr_dim))
+        self.norm1 = nn.LayerNorm(repr_dim//2)
+
+    def forward(self, embed, action):
+        action_embed = self.action_embed(action)
+        mhsa = self.norm1(self.mhsa(action_embed, embed, embed))
+        next_embed = self.linear(mhsa)
+        return next_embed
 class ViTEncoder(torch.nn.Module):
     def __init__(self):
         super().__init__()
@@ -145,7 +158,8 @@ class JEPA(nn.Module):
                 utils.freeze_param(self.context_encoder)
         self.context_encoder.to(device)
         self.repr_dim = self.context_encoder.repr_dim
-        self.predictor = Predictor(self.repr_dim).to(device)
+        self.predictor = Predictor_cross(self.repr_dim).to(device)
+        # self.predictor = Predictor(self.repr_dim).to(device)
 
     def forward(self, states, actions, train=False):
         # states = utils.preprocess_state(states)
