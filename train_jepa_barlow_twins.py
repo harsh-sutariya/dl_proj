@@ -93,6 +93,7 @@ def main(args):
             print(f'Train Loss: {train_loss} Epoch: {epoch}')
             wandb.log({"train_loss":train_loss})
             val_loss = val(jepa,target_encoder,val_dataloader,device)
+            print(f'Val Loss: {val_loss} Epoch: {epoch}')
             wandb.log({"val_loss":val_loss})
             if best_val_loss > val_loss:
                 best_val_loss = val_loss
