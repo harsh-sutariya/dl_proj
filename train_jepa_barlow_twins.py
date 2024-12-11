@@ -88,7 +88,6 @@ def main(args):
         target_encoder = jepa.context_encoder
         target_encoder.to(device)
         best_val_loss = float('inf')
-        val_loss = val(jepa,target_encoder,val_dataloader,device)
         for epoch in tqdm(range(args.epochs)):
             train_loss = train(jepa,target_encoder,train_dataloader,optimizer, args, device)
             print(f'Train Loss: {train_loss} Epoch: {epoch}')
