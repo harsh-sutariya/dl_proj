@@ -34,6 +34,35 @@ def compute_bt_loss(embed1, embed2, device, lam):
     off_diagonal = (torch.ones((D, D))-torch.eye(D)).reshape(1,D,D).repeat(T,1,1).to(device)
     c_diff *= (off_diagonal*lam + torch.eye(D).reshape(1,D, D).repeat(T,1,1).to(device))
     return c_diff.sum()
+
+def train(jepa, target_encoder, train_dataloader, optimizer, args, device):
+    jepa.train()
+    total_loss = 0
+    for idx, d in tqdm(enumerate(train_dataloader)):
+        pred_embed = jepa(states=d.states,actions=d.actions,train=args.teacher_forcing)
+        # processed_state = utils.preprocess_state(d.states)
+        B,T,C,H,W = d.states.shape
+        actual_embed = target_encoder(d.states.reshape(-1,C,H,W)).reshape(B,T,-1)
+        loss = compute_bt_loss(pred_embed[:,1:],actual_embed[:,1:],device, args.lam)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        total_loss += loss.item()
+    return total_loss/(idx+1)
+    
+
+def val(jepa, target_encoder, val_dataloader, device):
+    jepa.eval()
+    total_loss = 0
+    with torch.no_grad():
+        for idx, d in tqdm(enumerate(val_dataloader)):
+            pred_embed = jepa(states=d.states,actions=d.actions)
+            # d.states = utils.preprocess_state(d.states)
+            B,T,C,H,W = d.states.shape
+            actual_embed = target_encoder(d.states.reshape(-1,C,H,W)).reshape(B,T,-1)
+            loss = compute_bt_loss(pred_embed[:,1:],actual_embed[:,1:],device, args.lam)
+            total_loss += loss.item()
+        return total_loss/(idx+1)
 def main(args):
     wandb.login()
     with wandb.init(project="jepa",entity="dl-nyu", config=vars(args)):
@@ -59,36 +88,17 @@ def main(args):
         target_encoder = jepa.context_encoder
         target_encoder.to(device)
         best_val_loss = float('inf')
+        val_loss = val(jepa,target_encoder,val_dataloader,device)
         for epoch in tqdm(range(args.epochs)):
-            jepa.train()
-            total_loss = 0
-            for idx, d in tqdm(enumerate(train_dataloader)):
-                pred_embed = jepa(states=d.states,actions=d.actions,train=args.teacher_forcing)
-                # processed_state = utils.preprocess_state(d.states)
-                B,T,C,H,W = d.states.shape
-                actual_embed = target_encoder(d.states.reshape(-1,C,H,W)).reshape(B,T,-1)
-                loss = compute_bt_loss(pred_embed[:,1:],actual_embed[:,1:],device, args.lam)
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-                total_loss += loss.item()
-            print(f'Train Loss: {total_loss/(idx+1)} Epoch: {epoch}')
-            wandb.log({"train_loss":total_loss/(idx+1)})
-            jepa.eval()
-            total_loss = 0
-            with torch.no_grad():
-                for idx, d in tqdm(enumerate(val_dataloader)):
-                    pred_embed = jepa(states=d.states,actions=d.actions)
-                    # d.states = utils.preprocess_state(d.states)
-                    B,T,C,H,W = d.states.shape
-                    loss = compute_bt_loss(pred_embed[:,1:],actual_embed[:,1:],device, args.lam)
-                    total_loss += loss.item()
-                print(f'Val Loss: {total_loss/(idx+1)} Epoch: {epoch}')
-                wandb.log({"val_loss":total_loss/(idx+1)})
-                if best_val_loss > total_loss/(idx+1):
-                    best_val_loss = total_loss/(idx+1)
-                    torch.save(jepa.state_dict(),
-                            f'{save_dir}/{args.encoder}_{args.batch_size}_{args.lr}_best_model.pth')
+            train_loss = train(jepa,target_encoder,train_dataloader,optimizer, args, device)
+            print(f'Train Loss: {train_loss} Epoch: {epoch}')
+            wandb.log({"train_loss":train_loss})
+            val_loss = val(jepa,target_encoder,val_dataloader,device)
+            wandb.log({"val_loss":val_loss})
+            if best_val_loss > val_loss:
+                best_val_loss = val_loss
+                torch.save(jepa.state_dict(),
+                        f'{save_dir}/{args.encoder}_{args.batch_size}_{args.lr}_best_model.pth')
             torch.save(jepa.state_dict(),
                        f'{save_dir}/{args.encoder}_{args.batch_size}_{args.lr}_epoch_{epoch}.pth')
                     
