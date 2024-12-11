@@ -62,7 +62,7 @@ class Predictor_cross(torch.nn.Module):
     def __init__(self, repr_dim):
         super().__init__()
         self.action_embed = nn.Sequential(nn.Linear(2,repr_dim//2), nn.ReLU(),nn.Linear(repr_dim//2,repr_dim))
-        self.mhsa = torch.nn.MultiheadAttention(repr_dim,num_heads=8,kdim=repr_dim,vdim=repr_dim, batch_first=True)
+        self.mhsa = torch.nn.MultiheadAttention(repr_dim,num_heads=4,kdim=repr_dim,vdim=repr_dim, batch_first=True)
         self.linear = nn.Sequential(nn.Linear(repr_dim, repr_dim*2), nn.ReLU(), torch.nn.Linear(repr_dim*2, repr_dim))
         self.norm1 = nn.LayerNorm(repr_dim)
         self.norm2 = nn.LayerNorm(repr_dim)
