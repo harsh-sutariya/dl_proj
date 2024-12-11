@@ -39,6 +39,7 @@ def main(args):
         utils.seed_numpy(args.seed)
         utils.seed_torch(args.seed)
         save_dir = os.path.join("../jepa_models_tg",str(start_time))
+        print(f'Saving Dir: {save_dir}')
         os.makedirs(save_dir)
         data = dataset.WallDataset(
         data_path="/scratch/DL24FA/train",
@@ -66,8 +67,8 @@ def main(args):
                 actual_embed = target_encoder(d.states.reshape(-1,C,H,W)).reshape(B,T,-1)
                 bt_loss = []
                 for i in range(d.actions.shape[1]):
-                    bt_loss.append(compute_bt_loss(pred_embed[:,i+1],actual_embed[:,i+1],jepa.repr_dim,device, off_diagonal, args.lam))
-                loss = torch.concat(bt_loss).sum()
+                    bt_loss.append(compute_bt_loss(pred_embed[:,i+1],actual_embed[:,i+1],jepa.repr_dim,device, off_diagonal, args.lam).unsqueeze(-1))
+                loss = torch.concat(bt_loss).sum().squeeze(1)
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
