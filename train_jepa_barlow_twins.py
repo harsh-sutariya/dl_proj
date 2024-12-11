@@ -20,16 +20,19 @@ def get_device():
     print("Using device:", device)
     return device
 
-def compute_bt_loss(embed1, embed2, repr_dim, device, off_diagonal, lam):
+def compute_bt_loss(embed1, embed2, device, lam):
     """
-    e1: (B, D)
-    e2: (B, D)
+    e1: (B, T-1, D)
+    e2: (B, T-1, D)
     """
-    normalized_embed1 = (embed1 - embed1.mean(0))/embed1.std(0)
-    normalized_embed2 = (embed2 - embed2.mean(0))/embed2.std(0)
-    corr_matrix = torch.matmul(normalized_embed1.T,normalized_embed2)/embed1.shape[0]
-    c_diff = (corr_matrix - torch.eye(repr_dim).to(device)).pow(2)
-    c_diff *= (off_diagonal*lam + torch.eye(repr_dim).to(device))
+    B, T, D = embed1.shape
+    normalized_embed1 = (embed1 - embed1.mean(0))/embed1.std(0) # B, T-1, D
+    normalized_embed2 = (embed2 - embed2.mean(0))/embed2.std(0) # B, T-1, D
+    
+    corr_matrix = torch.bmm(normalized_embed1.permute(1,2,0),normalized_embed2.permute(1,0,2))/B # T-1, D, D
+    c_diff = (corr_matrix - torch.eye(D).reshape(1,D, D).repeat(T,1,1).to(device)).pow(2)
+    off_diagonal = (torch.ones((D, D))-torch.eye(D)).reshape(1,D,D).repeat(T,1,1).to(device)
+    c_diff *= (off_diagonal*lam + torch.eye(D).reshape(1,D, D).repeat(T,1,1).to(device))
     return c_diff.sum()
 def main(args):
     wandb.login()
@@ -56,7 +59,6 @@ def main(args):
         target_encoder = jepa.context_encoder
         target_encoder.to(device)
         best_val_loss = float('inf')
-        off_diagonal = (torch.ones((jepa.repr_dim, jepa.repr_dim))-torch.eye(jepa.repr_dim)).to(device)
         for epoch in tqdm(range(args.epochs)):
             jepa.train()
             total_loss = 0
@@ -65,10 +67,7 @@ def main(args):
                 # processed_state = utils.preprocess_state(d.states)
                 B,T,C,H,W = d.states.shape
                 actual_embed = target_encoder(d.states.reshape(-1,C,H,W)).reshape(B,T,-1)
-                bt_loss = []
-                for i in range(d.actions.shape[1]):
-                    bt_loss.append(compute_bt_loss(pred_embed[:,i+1],actual_embed[:,i+1],jepa.repr_dim,device, off_diagonal, args.lam).unsqueeze(-1))
-                loss = torch.concat(bt_loss).sum()
+                loss = compute_bt_loss(pred_embed[:,1:],actual_embed[:,1:],device, args.lam)
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
@@ -82,10 +81,7 @@ def main(args):
                     pred_embed = jepa(states=d.states,actions=d.actions)
                     # d.states = utils.preprocess_state(d.states)
                     B,T,C,H,W = d.states.shape
-                    bt_loss = []
-                    for i in range(d.actions.shape[1]):
-                        bt_loss.append(compute_bt_loss(pred_embed[:,i+1],actual_embed[:,i+1],jepa.repr_dim,device, off_diagonal, args.lam))
-                    loss = torch.concat(bt_loss).sum()
+                    loss = compute_bt_loss(pred_embed[:,1:],actual_embed[:,1:],device, args.lam)
                     total_loss += loss.item()
                 print(f'Val Loss: {total_loss/(idx+1)} Epoch: {epoch}')
                 wandb.log({"val_loss":total_loss/(idx+1)})
