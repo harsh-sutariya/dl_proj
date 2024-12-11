@@ -20,7 +20,7 @@ def load_data(device):
     )
     return training_set
 
-def distance(predictions, targets):
+def vicreg_distance(predictions, targets):
     
     # Invariance Loss (Alignment)
     invariance_loss = nn.MSELoss()(predictions, targets)
@@ -38,6 +38,29 @@ def distance(predictions, targets):
     vicreg_loss = invariance_loss + 0.1 * variance_regularization + 0.005 * off_diagonal_loss
     
     return vicreg_loss
+
+def barlow_twins_distance(predictions, targets, device):
+
+    lam = 5e-3
+    B, T, D = predictions.shape
+
+    # Normalize Predictions & Targets
+    normalized_predictions = (predictions - predictions.mean(dim=0)) / (predictions.std(dim=0) + 1e-6)
+    normalized_targets = (targets - targets.mean(dim=0)) / (targets.std(dim=0) + 1e-6)
+
+    # Cross-Correlation Matrix
+    corr_matrix = torch.bmm(
+        normalized_predictions.permute(1, 2, 0),
+        normalized_targets.permute(1, 0, 2)
+    ) / B
+
+    # Off-Diagonal Penalty
+    c_diff = (corr_matrix - torch.eye(D, device=device).reshape(1, D, D).repeat(T, 1, 1)).pow(2)
+    off_diagonal = (torch.ones((D, D), device=device) - torch.eye(D, device=device)).reshape(1, D, D).repeat(T, 1, 1)
+    c_diff *= (off_diagonal * lam + torch.eye(D, device=device).reshape(1, D, D).repeat(T, 1, 1))
+
+    loss = c_diff.sum()
+    return loss
 
 def train_model(model, dataloader, optimizer, epochs, device):
 
@@ -59,7 +82,8 @@ def train_model(model, dataloader, optimizer, epochs, device):
             actions = actions.to(device)
             
             predictions, targets = model(states, actions)
-            loss = distance(predictions, targets)
+            # loss = vicreg_distance(predictions, targets)
+            loss = barlow_twins_distance(predictions, targets, device)
             epoch_loss += loss.item()
             
             optimizer.zero_grad()
