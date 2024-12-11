@@ -68,7 +68,7 @@ def main(args):
                 bt_loss = []
                 for i in range(d.actions.shape[1]):
                     bt_loss.append(compute_bt_loss(pred_embed[:,i+1],actual_embed[:,i+1],jepa.repr_dim,device, off_diagonal, args.lam).unsqueeze(-1))
-                loss = torch.concat(bt_loss).sum().squeeze(1)
+                loss = torch.concat(bt_loss).sum()
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
