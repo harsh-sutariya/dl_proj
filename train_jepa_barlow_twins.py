@@ -26,8 +26,8 @@ def compute_bt_loss(embed1, embed2, device, lam):
     e2: (B, T-1, D)
     """
     B, T, D = embed1.shape
-    normalized_embed1 = (embed1 - embed1.mean(0))/embed1.std(0) # B, T-1, D
-    normalized_embed2 = (embed2 - embed2.mean(0))/embed2.std(0) # B, T-1, D
+    normalized_embed1 = (embed1 - embed1.mean(0))/(embed1.std(0)+1e-9) # B, T-1, D
+    normalized_embed2 = (embed2 - embed2.mean(0))/(embed2.std(0)+1e-9) # B, T-1, D
     
     corr_matrix = torch.bmm(normalized_embed1.permute(1,2,0),normalized_embed2.permute(1,0,2))/B # T-1, D, D
     c_diff = (corr_matrix - torch.eye(D).reshape(1,D, D).repeat(T,1,1).to(device)).pow(2)
