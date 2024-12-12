@@ -76,7 +76,7 @@ class Predictor_cross(torch.nn.Module):
 class ViTEncoder(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.vit = models.VisionTransformer(image_size=65,patch_size=5,num_layers=8,num_heads=8, hidden_dim=1024, mlp_dim=3072)
+        self.vit = models.VisionTransformer(image_size=65,patch_size=5,num_layers=7,num_heads=8, hidden_dim=1024, mlp_dim=3072)
         self.vit.conv_proj = nn.Conv2d(2,1024,kernel_size=(5,5), stride=(5,5))
         
     def forward(self, x):
