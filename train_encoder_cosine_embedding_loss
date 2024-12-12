@@ -76,7 +76,7 @@ def main(args):
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-                wandb.log({"batch_loss": loss.item(),"bt_loss_batch":bt_loss.item(),"contr_l_batch":contr_l.item()})
+                wandb.log({"batch_loss": loss,"bt_loss_batch":bt_loss,"contr_l_batch":contr_l})
             wandb.log({"loss":total_loss/len(dataloader), "lr": scheduler.get_last_lr()[0], "epoch":epoch, "bt_loss": bt_loss/len(dataloader), "contrastive_loss":contrastive_loss/len(dataloader)})
             if total_loss/len(dataloader) < best_loss:
                 best_loss = total_loss/len(dataloader)
