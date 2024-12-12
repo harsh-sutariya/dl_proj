@@ -77,7 +77,7 @@ def main(args):
                 loss.backward()
                 optimizer.step()
                 wandb.log({"batch_loss": loss,"bt_loss_batch":bt_l,"contr_l_batch":contr_l})
-            wandb.log({"loss":total_loss/len(dataloader), "lr": scheduler.get_last_lr()[0], "epoch":epoch, "bt_loss": bt_loss/len(dataloader), "contrastive_loss":contrastive_loss/len(dataloader)})
+            wandb.log({"loss":total_loss/len(datalocosine_embedding_lossader), "lr": scheduler.get_last_lr()[0], "epoch":epoch, "bt_loss": bt_loss/len(dataloader), "contrastive_loss":contrastive_loss/len(dataloader)})
             if total_loss/len(dataloader) < best_loss:
                 best_loss = total_loss/len(dataloader)
                 torch.save(encoder.state_dict(),
@@ -100,7 +100,7 @@ if __name__=="__main__":
     parser.add_argument("--seed", type=int,default=0)
     parser.add_argument("--num_workers", type=int, default=6)
     parser.add_argument("--margin", type=float, default=0.25)
-    parser.add_argument("--gamma",default=100)
+    parser.add_argument("--gamma",type=float,default=100)
     args = parser.parse_args()
     print(args)
     main(args)
