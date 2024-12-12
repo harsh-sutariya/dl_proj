@@ -68,7 +68,7 @@ def main(args):
                 positives = torch.concat([states[selected_bt,selected_sample_state:selected_sample_state+1] for _ in range(negatives.shape[0])]).to(device)
                 negative_embed = encoder(negatives)
                 positive_embed = encoder(positives)
-                contr_l = nn.functional.cosine_embedding_loss(positive_embed, negative_embed, torch.ones(negative_embed.shape[0], device=device)*-1, margin=args.margin)
+                contr_l = torch.clamp(nn.functional.cosine_similarity(positive_embed, negative_embed) - args.margin,min=torch.tensor(0,device=device))
                 loss = bt_l+ contr_l*max(args.gamma/(10**((idx/1000))),100)
                 bt_loss += bt_l.item()
                 contrastive_loss+= contr_l.item()
