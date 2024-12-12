@@ -51,7 +51,7 @@ def main(args):
             for idx, d in tqdm(enumerate(dataloader)):
                 states = d.states
                 B,T, C,H, W = states.shape
-                imgs = states.reshape(-1,)
+                imgs = states.reshape(-1, C,H,W)
                 img1 = t1(imgs).to(device)
                 img2 = t2(imgs).to(device)
                 embed1 = encoder(img1)
