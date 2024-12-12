@@ -31,7 +31,7 @@ def main(args):
         data = dataset.WallDataset(
         data_path="/scratch/DL24FA/train",
         probing=False,
-        device=device,)
+        device=torch.device("cpu"),)
         print("created dataset")
         dataloader = DataLoader(data,batch_size=args.batch_size,shuffle=True,pin_memory=False, num_workers=args.num_workers)
         encoder = models.Encoder(encoder=args.encoder)
