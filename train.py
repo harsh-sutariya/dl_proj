@@ -109,8 +109,8 @@ def main():
         project="jepa",
         entity="dl-nyu",
         config={
-            "epochs": 10,
-            "learning_rate": 1e-4,
+            "epochs": 20,
+            "learning_rate": 1e-3,
             "weight_decay": 1e-5,
             "model": "JEPA",
         },
@@ -119,11 +119,11 @@ def main():
     device = get_device()
     model = JEPA(inference = False)
     training_loader = load_data(device)
-    optimizer = torch.optim.AdamW(model.parameters(), lr = 1e-4, weight_decay= 1e-5)
+    optimizer = torch.optim.AdamW(model.parameters(), lr = 1e-3, weight_decay= 1e-5)
 
     wandb.watch(model, log="all")
 
-    train_model(model, training_loader, optimizer, epochs = 10, device = device)
+    train_model(model, training_loader, optimizer, epochs = 20, device = device)
 
     wandb.finish()
 

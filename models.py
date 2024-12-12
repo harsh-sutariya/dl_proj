@@ -74,7 +74,7 @@ class Encoder(nn.Module):
 
         super(Encoder, self).__init__()
 
-        self.ViT = create_model("vit_base_patch16_224", pretrained=False, img_size=65, in_chans=2, num_classes=0)
+        self.ViT = create_model("vit_large_patch16_224", pretrained=False, img_size=65, in_chans=2, num_classes=0)
         
         self.head = nn.Sequential(
             nn.Linear(768, 512),
