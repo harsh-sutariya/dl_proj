@@ -160,8 +160,8 @@ class JEPA(nn.Module):
                 utils.freeze_param(self.context_encoder)
         self.context_encoder.to(device)
         self.repr_dim = self.context_encoder.repr_dim
-        self.predictor = Predictor_cross(self.repr_dim).to(device)
-        # self.predictor = Predictor(self.repr_dim).to(device)
+        # self.predictor = Predictor_cross(self.repr_dim).to(device)
+        self.predictor = Predictor(self.repr_dim).to(device)
 
     def forward(self, states, actions, train=False):
         # states = utils.preprocess_state(states)
