@@ -76,10 +76,15 @@ class Encoder(nn.Module):
 
         self.ViT = create_model("vit_large_patch16_224", pretrained=False, img_size=65, in_chans=2, num_classes=0)
         
+        # self.head = nn.Sequential(
+        #     nn.Linear(768, 512),
+        #     nn.ReLU(),
+        #     nn.Linear(512, 768)
+        # )
         self.head = nn.Sequential(
-            nn.Linear(768, 512),
+            nn.Linear(1024, 768),
             nn.ReLU(),
-            nn.Linear(512, 768)
+            nn.Linear(768, 1024)
         )
 
     def forward(self, x):
@@ -94,11 +99,17 @@ class Predictor(nn.Module):
 
         super(Predictor, self).__init__()
 
+        # self.network = nn.Sequential(
+        #     nn.Linear(770, 768),
+        #     nn.BatchNorm1d(768),
+        #     nn.ReLU(),
+        #     nn.Linear(768, 768)
+        # )
         self.network = nn.Sequential(
-            nn.Linear(770, 768),
-            nn.BatchNorm1d(768),
+            nn.Linear(1026, 1024),
+            nn.BatchNorm1d(1024),
             nn.ReLU(),
-            nn.Linear(768, 768)
+            nn.Linear(1024, 1024)
         )
 
     def forward(self, x):
@@ -115,7 +126,8 @@ class JEPA(nn.Module):
         self.predictor = Predictor()
         self.target_encoder = Encoder()
         self.inference = inference
-        self.repr_dim = 768
+        # self.repr_dim = 768
+        self.repr_dim = 1024
 
     def forward(self, states, actions):
 
