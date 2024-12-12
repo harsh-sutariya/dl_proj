@@ -76,8 +76,8 @@ class Predictor_cross(torch.nn.Module):
 class ViTEncoder(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.vit = models.VisionTransformer(image_size=65,patch_size=5,num_layers=12,num_heads=12, hidden_dim=768, mlp_dim=3072)
-        self.vit.conv_proj = nn.Conv2d(2,768,kernel_size=(5,5), stride=(5,5))
+        self.vit = models.VisionTransformer(image_size=65,patch_size=5,num_layers=8,num_heads=8, hidden_dim=1024, mlp_dim=3072)
+        self.vit.conv_proj = nn.Conv2d(2,1024,kernel_size=(5,5), stride=(5,5))
         
     def forward(self, x):
         x = self.vit._process_input(x)
@@ -113,10 +113,10 @@ class Encoder(nn.Module):
             self.enc_dim = self.enc.vit.hidden_dim
         else:
             raise NotImplementedError
-        self.repr_dim = self.enc_dim//2
-        self.fc = nn.Linear(self.enc_dim,self.repr_dim)
+        self.repr_dim = self.enc_dim
+        # self.fc = nn.Linear(self.enc_dim,self.repr_dim)
     def forward(self, img):
-        return self.fc(self.enc(img))
+        return self.enc(img)
 
 class Baseline(torch.nn.Module):
     def __init__(self, device = "cuda", encoder="resnet50"):
