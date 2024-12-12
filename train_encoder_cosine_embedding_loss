@@ -57,10 +57,8 @@ def main(args):
                 embed1 = encoder(img1)
                 embed2 = encoder(img2)
                 
-                normalized_embed1 = torch.nn.functional.normalize(embed1,dim=0,eps=1e-8)
-                # (embed1 - embed1.mean(0))/(embed1.std(0)+1e-8)
-                normalized_embed2 = torch.nn.functional.normalize(embed2,dim=0, eps=1e-8)
-                # (embed2 - embed2.mean(0))/embed2.std(0)
+                normalized_embed1 = (embed1 - embed1.mean(0))/embed1.std(0)
+                normalized_embed2 = (embed2 - embed2.mean(0))/embed2.std(0)
                 corr_matrix = torch.matmul(normalized_embed1.T,normalized_embed2)/embed1.shape[0]
                 c_diff = (corr_matrix - torch.eye(encoder.repr_dim).to(device)).pow(2)
                 c_diff *= (off_diagonal*args.lam + torch.eye(encoder.repr_dim).to(device))
