@@ -64,7 +64,7 @@ def main(args):
                 bt_l = c_diff.sum()
                 selected_sample_state = torch.randint(low=0,high=T,size=())
                 selected_bt = torch.randint(low=0,high=B,size=())
-                negatives = torch.stack([states[:,:selected_sample_state], states[:,selected_sample_state+1:]],dim=1).reshape(-1,C,H,W).to(device)
+                negatives = torch.concat([states[:,:selected_sample_state], states[:,selected_sample_state+1:]],dim=1).reshape(-1,C,H,W).to(device)
                 positives = torch.concat([states[selected_bt,selected_sample_state:selected_sample_state+1] for _ in range(negatives.shape[0])]).to(device)
                 negative_embed = encoder(negatives)
                 positive_embed = encoder(positives)
