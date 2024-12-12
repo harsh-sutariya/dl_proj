@@ -4,6 +4,7 @@ from tqdm import tqdm
 from models import JEPA
 from dataset import create_wall_dataloader
 import wandb
+import argparse
 
 def get_device():
     """Check for GPU availability."""
@@ -62,9 +63,10 @@ def barlow_twins_distance(predictions, targets, device):
     loss = c_diff.sum()
     return loss
 
-def train_model(model, dataloader, optimizer, epochs, device):
+def train_model(model, dataloader, optimizer, epochs, device, lr):
 
-    weights_path="JEPA_Trained.pth"
+    # weights_path="JEPA_Trained.pth"
+    weights_path = f"JEPA_Trained_{lr}.pth"
 
     running_loss = float("inf")
     model = model.to(device)
@@ -103,6 +105,12 @@ def train_model(model, dataloader, optimizer, epochs, device):
 
 def main():
 
+    parser = argparse.ArgumentParser(description="Train JEPA with configurable learning rate.")
+    parser.add_argument("--lr", type=float, required=True, help="Learning rate for training.")
+    args = parser.parse_args()
+
+    lr = args.lr
+
     wandb.login()
 
     wandb.init(
@@ -110,7 +118,7 @@ def main():
         entity="dl-nyu",
         config={
             "epochs": 20,
-            "learning_rate": 1e-3,
+            "learning_rate": lr,
             "weight_decay": 1e-5,
             "model": "JEPA",
         },
@@ -119,11 +127,11 @@ def main():
     device = get_device()
     model = JEPA(inference = False)
     training_loader = load_data(device)
-    optimizer = torch.optim.AdamW(model.parameters(), lr = 1e-3, weight_decay= 1e-5)
+    optimizer = torch.optim.AdamW(model.parameters(), lr = lr, weight_decay= 1e-5)
 
     wandb.watch(model, log="all")
 
-    train_model(model, training_loader, optimizer, epochs = 20, device = device)
+    train_model(model, training_loader, optimizer, epochs = 20, device = device, lr = lr)
 
     wandb.finish()
 
