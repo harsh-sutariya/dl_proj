@@ -95,9 +95,9 @@ def main(args):
             if best_val_loss > val_loss:
                 best_val_loss = val_loss
                 torch.save(jepa.state_dict(),
-                        f'{save_dir}/{args.encoder}_{args.batch_size}_{args.lr}_best_model.pth')
+                        f'{save_dir}/{args.encoder}_{args.batch_size}_{args.lr}_{args.rnn}_best_model.pth')
             torch.save(jepa.state_dict(),
-                       f'{save_dir}/{args.encoder}_{args.batch_size}_{args.lr}_epoch_{epoch}.pth')
+                       f'{save_dir}/{args.encoder}_{args.batch_size}_{args.lr}_{args.rnn}_epoch_{epoch}.pth')
             scheduler.step()
                     
 if __name__=="__main__":
@@ -110,6 +110,7 @@ if __name__=="__main__":
     parser.add_argument("--encoder",type=str,default="resnet")
     parser.add_argument("--seed", type=int,default=0)
     parser.add_argument("--num_workers", type=int, default=6)
+    parser.add_argument("--rnn",type=str,default="rnn")
     args = parser.parse_args()
     print(args)
     main(args)
