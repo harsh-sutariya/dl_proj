@@ -3,7 +3,6 @@ import torch.nn as nn
 import dataset
 from torch.utils.data import DataLoader, random_split
 import main
-from models import Baseline
 import torch
 import argparse
 import wandb
@@ -13,7 +12,6 @@ import time
 import os
 import models
 
-D_cost = nn.MSELoss(reduction="none")
 def get_device():
     """Check for GPU availability."""
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -83,7 +81,7 @@ def main(args):
         print(len(train_dataset), len(val_dataset))
         train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, pin_memory=False)
         val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, pin_memory=False)
-        jepa = models.JEPA_gru_cell(encoder=args.encoder,device=device)
+        jepa = models.JEPA_RNNCell(encoder=args.encoder, rnn=args.rnn, device=device)
         optimizer = optim.Adam(jepa.parameters(),lr=args.lr,weight_decay=args.weight_decay)
         scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer,args.epochs,1e-5)
         best_val_loss = float('inf')
@@ -108,8 +106,8 @@ if __name__=="__main__":
     parser.add_argument("--lr",type=float,default=1e-4)
     parser.add_argument("--epochs",type=int,default=10)
     parser.add_argument("--weight_decay",type=float,default=1e-5)
-    parser.add_argument("--lam", type=float,default=20)
-    parser.add_argument("--encoder",type=str,default="resnet18")
+    parser.add_argument("--lam", type=float,default=0.005)
+    parser.add_argument("--encoder",type=str,default="resnet")
     parser.add_argument("--seed", type=int,default=0)
     parser.add_argument("--num_workers", type=int, default=6)
     args = parser.parse_args()

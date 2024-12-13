@@ -182,14 +182,21 @@ class JEPA(nn.Module):
         return pred
 
 
-class JEPA_gru_cell(torch.nn.Module):
-    def __init__(self, encoder="resnet", device="cuda", *args, **kwargs):
+class JEPA_RNNCell(torch.nn.Module):
+    def __init__(self, encoder="resnet", rnn="gru",device="cuda", *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.device = device
         self.context_encoder = Encoder(encoder)
         self.repr_dim = self.context_encoder.repr_dim
         self.action_encoder = nn.Sequential(nn.Linear(2,self.repr_dim*2), nn.ReLU(),nn.Linear(self.repr_dim*2,self.repr_dim))
-        self.predictor = nn.GRUCell(self.repr_dim*2,self.repr_dim*4)
+        if rnn == "rnn":
+            self.predictor = nn.RNNCell(self.repr_dim*2,self.repr_dim*4)
+        elif rnn == "lstm":
+            self.predictor = nn.LSTMCell(self.repr_dim*2,self.repr_dim*4)
+        elif rnn == "gru":
+            self.predictor = nn.GRUCell(self.repr_dim*2,self.repr_dim*4)
+        else:
+            NotImplementedError
         self.fc = nn.Sequential(nn.ReLU(), nn.Linear(self.repr_dim*4, self.repr_dim))
         self.set_device()
 
