@@ -76,10 +76,15 @@ class Encoder(nn.Module):
 
         self.ViT = create_model("vit_base_patch16_384", pretrained=False, img_size=65, in_chans=2, num_classes=0)
         
+        # self.head = nn.Sequential(
+        #     nn.Linear(768, 512),
+        #     nn.ReLU(),
+        #     nn.Linear(512, 768)
+        # )
         self.head = nn.Sequential(
-            nn.Linear(768, 512),
+            nn.Linear(768, 1024),
             nn.ReLU(),
-            nn.Linear(512, 768)
+            nn.Linear(1024, 2048)
         )
         # self.head = nn.Sequential(
         #     nn.Linear(1024, 768),
@@ -99,11 +104,17 @@ class Predictor(nn.Module):
 
         super(Predictor, self).__init__()
 
+        # self.network = nn.Sequential(
+        #     nn.Linear(770, 768),
+        #     nn.BatchNorm1d(768),
+        #     nn.ReLU(),
+        #     nn.Linear(768, 768)
+        # )
         self.network = nn.Sequential(
-            nn.Linear(770, 768),
-            nn.BatchNorm1d(768),
+            nn.Linear(2050, 2048),
+            nn.BatchNorm1d(2048),
             nn.ReLU(),
-            nn.Linear(768, 768)
+            nn.Linear(2048, 2048)
         )
         # self.network = nn.Sequential(
         #     nn.Linear(1026, 1024),
@@ -126,8 +137,17 @@ class JEPA(nn.Module):
         self.predictor = Predictor()
         self.target_encoder = Encoder()
         self.inference = inference
-        self.repr_dim = 768
+        # self.repr_dim = 768
+        self.repr_dim = 2048
         # self.repr_dim = 1024
+
+        self.initialize_target_encoder()
+
+    def initialize_target_encoder(self):
+
+        for target_param, encoder_param in zip(self.target_encoder.parameters(), self.encoder.parameters()):
+            target_param.data = encoder_param.data.clone()
+            target_param.requires_grad = False
 
     def forward(self, states, actions):
 
