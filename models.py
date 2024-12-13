@@ -76,7 +76,7 @@ class Predictor_cross(torch.nn.Module):
 class ViTEncoder(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.vit = models.VisionTransformer(image_size=65,patch_size=5,num_layers=7,num_heads=8, hidden_dim=1024, mlp_dim=3072)
+        self.vit = models.VisionTransformer(image_size=65,patch_size=5,num_layers=6,num_heads=8, hidden_dim=768, mlp_dim=3072)
         self.vit.conv_proj = nn.Conv2d(2,1024,kernel_size=(5,5), stride=(5,5))
         
     def forward(self, x):
@@ -96,36 +96,37 @@ class ViTEncoder(torch.nn.Module):
 class ResNetEncoder(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.enc = models.resnet50()
-        self.enc.conv1 = nn.Conv2d(2,64, kernel_size=(7,7), padding=(3,3), bias=False)
+        self.enc = models.resnet18()
+        self.enc.conv1 = nn.Conv2d(2,64, kernel_size=(7,7), padding=(3,3), stride=(2,2),bias=False)
         self.enc = nn.Sequential(*(list(self.enc.children())[:-1]))
     def forward(self, x):
         return self.enc(x).reshape(x.shape[0],-1)
 
 class Encoder(nn.Module):
-    def __init__(self, encoder="resnet50", *kwargs):
+    def __init__(self, encoder="resnet", *kwargs):
         super().__init__()
-        if encoder=="resnet50":
+        if encoder=="resnet":
             self.enc = ResNetEncoder()
-            self.enc_dim = 2048
+            self.enc_dim = 512
         elif encoder=="ViT":
             self.enc = ViTEncoder()
             self.enc_dim = self.enc.vit.hidden_dim
         else:
             raise NotImplementedError
-        self.repr_dim = self.enc_dim
-        # self.fc = nn.Linear(self.enc_dim,self.repr_dim)
+        self.repr_dim = 256
+        self.fc = nn.Linear(self.enc_dim,self.repr_dim)
     def forward(self, img):
-        return self.enc(img)
+        return self.fc(self.enc(img))
+    
 
 class Baseline(torch.nn.Module):
-    def __init__(self, device = "cuda", encoder="resnet50"):
+    def __init__(self, device = "cuda", encoder="resnet18"):
         super().__init__()
         self.device = device
-        if encoder=="resnet50":
-            m = models.resnet50(weights="DEFAULT")
+        if encoder=="resnet18":
+            m = models.resnet18(weights="DEFAULT")
             self.encoder = nn.Sequential(*(list(m.children())[:-1]))
-            self.repr_dim = 2048
+            self.repr_dim = 512
         utils.freeze_param(self.encoder)
         self.predictor = Predictor(self.repr_dim)
     
@@ -179,6 +180,38 @@ class JEPA(nn.Module):
         pred = torch.concat(predicted_embeddings,dim=1)
         return pred
 
+
+class JEPA_gru_cell(torch.nn.Module):
+    def __init__(self, encoder="resnet", device="cuda", *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.device = device
+        self.context_encoder = Encoder(encoder)
+        self.repr_dim = self.context_encoder.repr_dim
+        self.action_encoder = nn.Sequential(nn.Linear(2,self.repr_dim*2), nn.ReLU(),nn.Linear(self.repr_dim*2,self.repr_dim))
+        self.predictor = nn.GRUCell(self.repr_dim*2,self.repr_dim*4)
+        self.fc = nn.Sequential(nn.ReLU(), nn.Linear(self.repr_dim*4, self.repr_dim))
+        self.set_device()
+
+    def forward(self, states, actions):
+        B, T, _ = actions.shape
+        s0 = self.context_encoder(states[:,0]) # B, Repr_dim
+        action_encoding = self.action_encoder(actions.reshape(-1,2)).reshape(B,T,-1)
+        last_embed = s0
+        predicted_embeddings = [s0.unsqueeze(1)]
+        for t in range(T):
+            input_embed = torch.concat([last_embed,action_encoding[:,t]], dim=1)
+            latent_embed = self.predictor(input_embed)
+            last_embed = self.fc(latent_embed)
+            predicted_embeddings.append(last_embed.unsqueeze(1))
+        predictions = torch.concat(predicted_embeddings, dim=1)
+        return predictions
+    
+    def set_device(self):
+        self.context_encoder.to(self.device)
+        self.action_encoder.to(self.device)
+        self.predictor.to(self.device)
+        self.fc.to(self.device)
+        
 class Prober(torch.nn.Module):
     def __init__(
         self,
