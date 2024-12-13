@@ -119,7 +119,7 @@ def main():
         project="jepa",
         entity="dl-nyu",
         config={
-            "epochs": 10,
+            "epochs": 20,
             "learning_rate": lr,
             "weight_decay": 1e-5,
             "model": "JEPA",
@@ -133,7 +133,7 @@ def main():
 
     wandb.watch(model, log="all")
 
-    train_model(model, training_loader, optimizer, epochs = 10, device = device, lr = lr)
+    train_model(model, training_loader, optimizer, epochs = 20, device = device, lr = lr)
 
     wandb.finish()
 
