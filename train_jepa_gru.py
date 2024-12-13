@@ -47,6 +47,7 @@ def train(jepa, train_dataloader, optimizer, args, device):
         loss.backward()
         optimizer.step()
         total_loss += loss.item()
+        wandb.log({"train_batch_loss":loss})
     return total_loss/(idx+1)
     
 
@@ -60,6 +61,7 @@ def val(jepa, val_dataloader, device):
             actual_embed = jepa.context_encoder(d.states.reshape(-1,C,H,W)).reshape(B,T,-1)
             loss = compute_bt_loss(pred_embed[:,1:],actual_embed[:,1:],device, args.lam)
             total_loss += loss.item()
+            wandb.log({"val_batch_loss":loss})
         return total_loss/(idx+1)
 def main(args):
     wandb.login()
