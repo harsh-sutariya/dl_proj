@@ -91,6 +91,8 @@ def train_model(model, dataloader, optimizer, epochs, device, lr):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+
+            model.update_target_encoder()
             
             wandb.log({"Batch Loss": loss.item()})
 

@@ -148,6 +148,12 @@ class JEPA(nn.Module):
         for target_param, encoder_param in zip(self.target_encoder.parameters(), self.encoder.parameters()):
             target_param.data = encoder_param.data.clone()
             target_param.requires_grad = False
+    
+    @torch.no_grad()
+    def update_target_encoder(self):
+        
+        for target_param, encoder_param in zip(self.target_encoder.parameters(), self.encoder.parameters()):
+            target_param.data.copy_(encoder_param.data)
 
     def forward(self, states, actions):
 
