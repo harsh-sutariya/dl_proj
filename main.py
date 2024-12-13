@@ -46,7 +46,7 @@ def load_model(device):
     # TODO: Replace MockModel with your trained model
     # model = MockModel()
     model = JEPA(inference=True)
-    model.load_state_dict(torch.load("JEPA_Trained.pth", map_location=device, weights_only=True))
+    model.load_state_dict(torch.load("JEPA_Trained_0.0001.pth", map_location=device, weights_only=True))
     model = model.to(device)
     return model
 
