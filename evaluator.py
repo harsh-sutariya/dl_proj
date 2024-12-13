@@ -20,7 +20,7 @@ from normalizer import Normalizer
 @dataclass
 class ProbingConfig(ConfigBase):
     probe_targets: str = "locations"
-    lr: float = 0.0002
+    lr: float = 0.00005
     epochs: int = 20
     schedule: LRSchedule = LRSchedule.Cosine
     sample_timesteps: int = 30
@@ -155,7 +155,7 @@ class ProbingEvaluator:
                 pred_locs = torch.stack([prober(x) for x in pred_encs], dim=1)
                 losses = location_losses(pred_locs, target)
                 per_probe_loss = losses.mean()
-
+                print(per_probe_loss)
                 if step % 100 == 0:
                     print(f"normalized pred locations loss {per_probe_loss.item()}")
 

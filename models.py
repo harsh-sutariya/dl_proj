@@ -91,6 +91,7 @@ class ViTEncoder(torch.nn.Module):
 
         # Classifier "token" as used by standard language architectures
         x = x[:, 0]
+        print(x.shape)
         return x
 
 class ResNetEncoder(torch.nn.Module):
