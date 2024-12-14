@@ -251,9 +251,9 @@ class JEPA_RNN(torch.nn.Module):
         predicted_embeddings = [s0.unsqueeze(1)]
         for t in range(T):
             if self.rnn == "lstm":
-                last_embed, _ = self.predictor(action_encoding[:t],(last_embed, torch.zeros_like(last_embed,device=self.device)))
+                last_embed, _ = self.predictor(action_encoding[:,t],(last_embed, torch.zeros_like(last_embed,device=self.device)))
             else:
-                last_embed = self.predictor(action_encoding[:t],last_embed)
+                last_embed = self.predictor(action_encoding[:,t],last_embed)
             predicted_embeddings.append(last_embed.unsqueeze(1))
         predictions = torch.concat(predicted_embeddings, dim=1)
         return predictions
