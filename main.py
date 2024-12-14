@@ -1,8 +1,9 @@
 from dataset import create_wall_dataloader
 from evaluator import ProbingEvaluator
 import torch
-from models import MockModel
+from models import MockModel, JEPA_RNNCell
 import glob
+import utils 
 
 
 def get_device():
@@ -77,7 +78,10 @@ def load_expert_data(device):
 def load_model():
     """Load or initialize the model."""
     # TODO: Replace MockModel with your trained model
-    model = MockModel()
+    model = JEPA_RNNCell(rnn="lstm")
+    model.load_state_dict(torch.load("./jepa_LSTM_wo_hidden.pth"))
+    model.to(get_device())
+    # utils.freeze_param(model)
     return model
 
 
@@ -102,6 +106,9 @@ if __name__ == "__main__":
     device = get_device()
     model = load_model()
 
+    total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(f"Total Trainable Parameters: {total_params:,}")
+    
     probe_train_ds, probe_val_ds = load_data(device)
     evaluate_model(device, model, probe_train_ds, probe_val_ds)
 
