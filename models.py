@@ -262,7 +262,6 @@ class JEPA_RNN(torch.nn.Module):
         self.context_encoder.to(self.device)
         self.action_encoder.to(self.device)
         self.predictor.to(self.device)
-        self.fc.to(self.device)
 
 class Prober(torch.nn.Module):
     def __init__(
