@@ -81,7 +81,7 @@ def main(args):
         print(len(train_dataset), len(val_dataset))
         train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, pin_memory=False)
         val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, pin_memory=False)
-        jepa = models.JEPA_RNN(encoder=args.encoder, rnn=args.rnn, device=device)
+        jepa = models.JEPA_RNNCell(encoder=args.encoder, rnn=args.rnn, device=device)
         optimizer = optim.Adam(jepa.parameters(),lr=args.lr,weight_decay=args.weight_decay)
         scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer,args.epochs,1e-5)
         best_val_loss = float('inf')
