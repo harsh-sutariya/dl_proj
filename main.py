@@ -1,7 +1,7 @@
 from dataset import create_wall_dataloader
 from evaluator import ProbingEvaluator
 import torch
-from models import MockModel, JEPA, JEPA_RNNCell
+from models import MockModel, JEPA, JEPA_RNNCell, JEPA_RNN
 import glob
 import utils
 
@@ -45,8 +45,8 @@ def load_data(device):
 def load_model():
     """Load or initialize the model."""
     # TODO: Replace MockModel with your trained model
-    model = JEPA_RNNCell()
-    model.load_state_dict(torch.load("./jepa.pth"))
+    model = JEPA_RNN()
+    model.load_state_dict(torch.load("./jepa_rnn.pth"))
     model.to(get_device())
     utils.freeze_param(model)
     return model
