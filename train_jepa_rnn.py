@@ -85,13 +85,16 @@ def main(args):
         optimizer = optim.Adam(jepa.parameters(),lr=args.lr,weight_decay=args.weight_decay)
         scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer,args.epochs,1e-5)
         best_val_loss = float('inf')
+        wandb.watch(jepa, log="all")
+        wandb.define_metric("epoch")
+        wandb.define_metric("train_loss",step_metric="epoch")
+        wandb.define_metric("val_loss",step_metric="epoch")
         for epoch in tqdm(range(args.epochs)):
             train_loss = train(jepa,train_dataloader,optimizer, args, device)
             print(f'Train Loss: {train_loss} Epoch: {epoch}')
-            wandb.log({"train_loss":train_loss}, step=epoch)
             val_loss = val(jepa,val_dataloader,device)
             print(f'Val Loss: {val_loss} Epoch: {epoch}')
-            wandb.log({"val_loss":val_loss},step=epoch)
+            wandb.log({"val_loss":val_loss,"train_loss":train_loss})
             if best_val_loss > val_loss:
                 best_val_loss = val_loss
                 torch.save(jepa.state_dict(),
