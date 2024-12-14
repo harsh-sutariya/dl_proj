@@ -188,6 +188,7 @@ class JEPA_RNNCell(torch.nn.Module):
         self.context_encoder = Encoder(encoder)
         self.repr_dim = self.context_encoder.repr_dim
         self.action_encoder = nn.Sequential(nn.Linear(2,self.repr_dim*2), nn.ReLU(),nn.Linear(self.repr_dim*2,self.repr_dim))
+        self.rnn = rnn
         if rnn == "rnn":
             self.predictor = nn.RNNCell(self.repr_dim*2,self.repr_dim*4)
         elif rnn == "lstm":
@@ -207,7 +208,10 @@ class JEPA_RNNCell(torch.nn.Module):
         predicted_embeddings = [s0.unsqueeze(1)]
         for t in range(T):
             input_embed = torch.concat([last_embed,action_encoding[:,t]], dim=1)
-            latent_embed = self.predictor(input_embed)
+            if self.rnn == "lstm":
+                latent_embed,_ = self.predictor(input_embed)
+            else:
+                latent_embed = self.predictor(input_embed)
             last_embed = self.fc(latent_embed)
             predicted_embeddings.append(last_embed.unsqueeze(1))
         predictions = torch.concat(predicted_embeddings, dim=1)
