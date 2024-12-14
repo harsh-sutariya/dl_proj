@@ -94,7 +94,7 @@ def main(args):
             print(f'Train Loss: {train_loss} Epoch: {epoch}')
             val_loss = val(jepa,val_dataloader,device)
             print(f'Val Loss: {val_loss} Epoch: {epoch}')
-            wandb.log({"val_loss":val_loss,"train_loss":train_loss})
+            wandb.log({"val_loss":val_loss,"train_loss":train_loss, "epoch":epoch})
             if best_val_loss > val_loss:
                 best_val_loss = val_loss
                 torch.save(jepa.state_dict(),
