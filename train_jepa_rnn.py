@@ -68,7 +68,7 @@ def main(args):
         device = get_device()
         utils.seed_numpy(args.seed)
         utils.seed_torch(args.seed)
-        save_dir = os.path.join("../jepa_models_gru",str(start_time))
+        save_dir = os.path.join("../jepa_models_rnn",str(start_time))
         print(f'Saving Dir: {save_dir}')
         os.makedirs(save_dir)
         data = dataset.WallDataset(
@@ -88,10 +88,10 @@ def main(args):
         for epoch in tqdm(range(args.epochs)):
             train_loss = train(jepa,train_dataloader,optimizer, args, device)
             print(f'Train Loss: {train_loss} Epoch: {epoch}')
-            wandb.log({"train_loss":train_loss})
+            wandb.log({"train_loss":train_loss}, step=epoch)
             val_loss = val(jepa,val_dataloader,device)
             print(f'Val Loss: {val_loss} Epoch: {epoch}')
-            wandb.log({"val_loss":val_loss})
+            wandb.log({"val_loss":val_loss},step=epoch)
             if best_val_loss > val_loss:
                 best_val_loss = val_loss
                 torch.save(jepa.state_dict(),
