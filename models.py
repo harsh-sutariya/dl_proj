@@ -222,7 +222,48 @@ class JEPA_RNNCell(torch.nn.Module):
         self.action_encoder.to(self.device)
         self.predictor.to(self.device)
         self.fc.to(self.device)
-        
+
+
+class JEPA_RNN(torch.nn.Module):
+    def __init__(self, encoder="resnet", rnn="gru",device="cuda", *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.device = device
+        self.context_encoder = Encoder(encoder)
+        self.repr_dim = self.context_encoder.repr_dim
+        self.action_encoder = nn.Sequential(nn.Linear(2,self.repr_dim), nn.ReLU(),nn.Linear(self.repr_dim,self.repr_dim//2))
+        self.rnn = rnn
+        if rnn == "rnn":
+            self.predictor = nn.RNNCell(self.repr_dim//2,self.repr_dim)
+        elif rnn == "lstm":
+            self.predictor = nn.LSTMCell(self.repr_dim//2,self.repr_dim)
+        elif rnn == "gru":
+            self.predictor = nn.GRUCell(self.repr_dim//2,self.repr_dim)
+        else:
+            NotImplementedError
+        # self.fc = nn.Sequential(nn.ReLU(), nn.Linear(self.repr_dim*4, self.repr_dim))
+        self.set_device()
+
+    def forward(self, states, actions):
+        B, T, _ = actions.shape
+        s0 = self.context_encoder(states[:,0]) # B, Repr_dim
+        action_encoding = self.action_encoder(actions.reshape(-1,2)).reshape(B,T,-1)
+        last_embed = s0
+        predicted_embeddings = [s0.unsqueeze(1)]
+        for t in range(T):
+            if self.rnn == "lstm":
+                last_embed, _ = self.predictor(action_encoding[:t],(last_embed, torch.zeros_like(last_embed,device=self.device)))
+            else:
+                last_embed = self.predictor(action_encoding[:t],last_embed)
+            predicted_embeddings.append(last_embed.unsqueeze(1))
+        predictions = torch.concat(predicted_embeddings, dim=1)
+        return predictions
+    
+    def set_device(self):
+        self.context_encoder.to(self.device)
+        self.action_encoder.to(self.device)
+        self.predictor.to(self.device)
+        self.fc.to(self.device)
+
 class Prober(torch.nn.Module):
     def __init__(
         self,
