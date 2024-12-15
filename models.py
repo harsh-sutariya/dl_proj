@@ -265,6 +265,49 @@ class JEPA_RNNCell_seq(torch.nn.Module):
         self.predictor.to(self.device)
         self.fc.to(self.device)
 
+class JEPA_RNNCell_tanh(torch.nn.Module):
+    def __init__(self, encoder="resnet", rnn="gru",device="cuda", *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.device = device
+        self.context_encoder = Encoder(encoder)
+        self.repr_dim = self.context_encoder.repr_dim
+        self.action_encoder = nn.Sequential(nn.Linear(2,self.repr_dim*2), nn.ReLU(),nn.Linear(self.repr_dim*2,self.repr_dim))
+        self.rnn = rnn
+        if rnn == "rnn":
+            self.predictor = nn.RNNCell(self.repr_dim*2,self.repr_dim*4)
+        elif rnn == "lstm":
+            self.predictor = nn.LSTMCell(self.repr_dim*2,self.repr_dim*4)
+        elif rnn == "gru":
+            self.predictor = nn.GRUCell(self.repr_dim*2,self.repr_dim*4)
+        else:
+            NotImplementedError
+        self.fc = nn.Sequential(nn.Linear(self.repr_dim*4, self.repr_dim))
+        self.set_device()
+
+    def forward(self, states, actions):
+        B, T, _ = actions.shape
+        s0 = self.context_encoder(states[:,0]) # B, Repr_dim
+        action_encoding = self.action_encoder(actions.reshape(-1,2)).reshape(B,T,-1)
+        last_embed = s0
+        predicted_embeddings = [s0.unsqueeze(1)]
+        for t in range(T):
+            input_embed = torch.concat([last_embed,action_encoding[:,t]], dim=1)
+            if self.rnn == "lstm":
+                latent_embed,_ = self.predictor(input_embed)
+            else:
+                latent_embed = self.predictor(input_embed)
+            last_embed = self.fc(latent_embed)
+            predicted_embeddings.append(last_embed.unsqueeze(1))
+        predictions = torch.concat(predicted_embeddings, dim=1)
+        return predictions
+    
+    def set_device(self):
+        self.context_encoder.to(self.device)
+        self.action_encoder.to(self.device)
+        self.predictor.to(self.device)
+        self.fc.to(self.device)
+
+
 class JEPA_RNN(torch.nn.Module):
     def __init__(self, encoder="resnet", rnn="gru",device="cuda", *args, **kwargs):
         super().__init__(*args, **kwargs)
