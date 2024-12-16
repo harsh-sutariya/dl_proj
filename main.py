@@ -79,8 +79,10 @@ def load_model():
     """Load or initialize the model."""
     # TODO: Replace MockModel with your trained model
     model = JEPA_RNNCell_tanh(rnn="lstm")
-    model.load_state_dict(torch.load("./jepa_LSTM.pth"))
+    model.load_state_dict(torch.load("./jepa_LSTM_wo_hidden_tanh.pth"))
     model.to(get_device())
+    utils.seed_numpy(0)
+    utils.seed_torch(0)
     return model
 
 
