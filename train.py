@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader, random_split
 import main
 import torch
 import argparse
-import wandb
+# import wandb
 import utils
 from tqdm import tqdm
 import time
@@ -45,7 +45,7 @@ def train(jepa, train_dataloader, optimizer, args, device):
         loss.backward()
         optimizer.step()
         total_loss += loss.item()
-        wandb.log({"train_batch_loss":loss})
+        # wandb.log({"train_batch_loss":loss})
     return total_loss/(idx+1)
     
 
@@ -59,50 +59,50 @@ def val(jepa, val_dataloader, device):
             actual_embed = jepa.context_encoder(d.states.reshape(-1,C,H,W)).reshape(B,T,-1)
             loss = compute_bt_loss(pred_embed[:,1:],actual_embed[:,1:],device, args.lam)
             total_loss += loss.item()
-            wandb.log({"val_batch_loss":loss})
+            # wandb.log({"val_batch_loss":loss})
         return total_loss/(idx+1)
     
 def main(args):
-    wandb.login()
-    with wandb.init(project="jepa-gru",entity="dl-nyu", config=vars(args)):
-        start_time = time.time()
-        device = get_device()
-        utils.seed_numpy(args.seed)
-        utils.seed_torch(args.seed)
-        save_dir = os.path.join("../jepa_models_rnn_wo_hidden",str(start_time))
-        print(f'Saving Dir: {save_dir}')
-        os.makedirs(save_dir)
-        data = dataset.WallDataset(
-        data_path="/scratch/DL24FA/train",
-        probing=False,
-        device=device,)
-        train_size = int(0.9 * len(data))
-        val_size = len(data) - train_size
-        train_dataset, val_dataset = random_split(data, [train_size, val_size])
-        print(len(train_dataset), len(val_dataset))
-        train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, pin_memory=False)
-        val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, pin_memory=False)
-        jepa = models.JEPA_RNNCell_tanh(encoder=args.encoder, rnn=args.rnn, device=device)
-        optimizer = optim.Adam(jepa.parameters(),lr=args.lr,weight_decay=args.weight_decay)
-        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer,args.epochs,1e-5)
-        best_val_loss = float('inf')
-        wandb.watch(jepa, log="all")
-        wandb.define_metric("epoch")
-        wandb.define_metric("train_loss",step_metric="epoch")
-        wandb.define_metric("val_loss",step_metric="epoch")
-        for epoch in tqdm(range(args.epochs)):
-            train_loss = train(jepa,train_dataloader,optimizer, args, device)
-            print(f'Train Loss: {train_loss} Epoch: {epoch}')
-            val_loss = val(jepa,val_dataloader,device)
-            print(f'Val Loss: {val_loss} Epoch: {epoch}')
-            wandb.log({"val_loss":val_loss,"train_loss":train_loss, "epoch":epoch})
-            if best_val_loss > val_loss:
-                best_val_loss = val_loss
-                torch.save(jepa.state_dict(),
-                        f'{save_dir}/{args.encoder}_{args.batch_size}_{args.lr}_{args.rnn}_best_model.pth')
+    # wandb.login()
+    # with wandb.init(project="jepa-gru",entity="dl-nyu", config=vars(args)):
+    start_time = time.time()
+    device = get_device()
+    utils.seed_numpy(args.seed)
+    utils.seed_torch(args.seed)
+    save_dir = os.path.join("../jepa_models_rnn_wo_hidden",str(start_time))
+    print(f'Saving Dir: {save_dir}')
+    os.makedirs(save_dir)
+    data = dataset.WallDataset(
+    data_path="/scratch/DL24FA/train",
+    probing=False,
+    device=device,)
+    train_size = int(0.9 * len(data))
+    val_size = len(data) - train_size
+    train_dataset, val_dataset = random_split(data, [train_size, val_size])
+    print(len(train_dataset), len(val_dataset))
+    train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, pin_memory=False)
+    val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, pin_memory=False)
+    jepa = models.JEPA_RNNCell(encoder=args.encoder, rnn=args.rnn, device=device)
+    optimizer = optim.Adam(jepa.parameters(),lr=args.lr,weight_decay=args.weight_decay)
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer,args.epochs,1e-5)
+    best_val_loss = float('inf')
+    # wandb.watch(jepa, log="all")
+    # wandb.define_metric("epoch")
+    # wandb.define_metric("train_loss",step_metric="epoch")
+    # wandb.define_metric("val_loss",step_metric="epoch")
+    for epoch in tqdm(range(args.epochs)):
+        train_loss = train(jepa,train_dataloader,optimizer, args, device)
+        print(f'Train Loss: {train_loss} Epoch: {epoch}')
+        val_loss = val(jepa,val_dataloader,device)
+        print(f'Val Loss: {val_loss} Epoch: {epoch}')
+        # wandb.log({"val_loss":val_loss,"train_loss":train_loss, "epoch":epoch})
+        if best_val_loss > val_loss:
+            best_val_loss = val_loss
             torch.save(jepa.state_dict(),
-                       f'{save_dir}/{args.encoder}_{args.batch_size}_{args.lr}_{args.rnn}_epoch_{epoch}.pth')
-            scheduler.step()
+                    f'{save_dir}/{args.encoder}_{args.batch_size}_{args.lr}_{args.rnn}_best_model.pth')
+        torch.save(jepa.state_dict(),
+                    f'{save_dir}/{args.encoder}_{args.batch_size}_{args.lr}_{args.rnn}_epoch_{epoch}.pth')
+        scheduler.step()
                     
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
