@@ -155,6 +155,7 @@ class ProbingEvaluator:
                 pred_locs = torch.stack([prober(x) for x in pred_encs], dim=1)
                 losses = location_losses(pred_locs, target)
                 per_probe_loss = losses.mean()
+
                 if step % 100 == 0:
                     print(f"normalized pred locations loss {per_probe_loss.item()}")
 
@@ -209,7 +210,7 @@ class ProbingEvaluator:
         for idx, batch in enumerate(tqdm(val_ds, desc="Eval probe pred")):
             ################################################################################
             # TODO: Forward pass through your model
-            init_states = batch.states[:, 0:1]  # BS, 1, C, H, W
+            init_states = batch.states[:, 0:1]  # BS, 1 C, H, W
             pred_encs = model(states=init_states, actions=batch.actions)
             # # BS, T, D --> T, BS, D
             pred_encs = pred_encs.transpose(0, 1)
