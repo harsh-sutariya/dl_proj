@@ -69,7 +69,7 @@ def main(args):
     device = get_device()
     utils.seed_numpy(args.seed)
     utils.seed_torch(args.seed)
-    save_dir = os.path.join("../jepa_models_rnn_wo_hidden",str(start_time))
+    save_dir = os.path.join("./jepa_models_rnn_wo_hidden",str(start_time))
     print(f'Saving Dir: {save_dir}')
     os.makedirs(save_dir)
     data = dataset.WallDataset(

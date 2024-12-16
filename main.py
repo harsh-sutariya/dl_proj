@@ -79,7 +79,7 @@ def load_model():
     """Load or initialize the model."""
     # TODO: Replace MockModel with your trained model
     model = JEPA_RNNCell_tanh(rnn="lstm")
-    model.load_state_dict(torch.load("./jepa_LSTM_wo_hidden_tanh.pth"))
+    model.load_state_dict(torch.load("./jepa_LSTM_wo_hidden_tanh.pth")) # If you are training a new model, the best model will be saved in the ./jepa_models_rnn_wo_hidden/{start_time}/resnet_256_0.0001_lstm_best_model.pth where the current working directory is same as train.py
     model.to(get_device())
     utils.seed_numpy(0)
     utils.seed_torch(0)
