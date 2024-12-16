@@ -39,18 +39,7 @@ class WallDataset:
             locations = torch.empty(0).to(self.device)
 
         return WallSample(states=states, locations=locations, actions=actions)
-
-
-class ObsDataset(torch.utils.data.Dataset):
-    def __init__(self, data_path):
-        self.images = np.load(f'{data_path}/states.npy', mmap_mode="r")
-        _,_,C,H,W = self.images.shape
-        self.images = self.images.reshape(-1,C,H,W)
-    def __len__(self):
-        return self.images.shape[0]
-    def __getitem__(self,i):
-        return torch.from_numpy(self.images[i]).float()
-        
+       
 
 def create_wall_dataloader(
     data_path,

@@ -1,7 +1,7 @@
 from dataset import create_wall_dataloader
 from evaluator import ProbingEvaluator
 import torch
-from models import MockModel, JEPA_RNNCell_tanh
+from models import MockModel, JEPA_RNNCell
 import glob
 import utils 
 
@@ -78,10 +78,9 @@ def load_expert_data(device):
 def load_model():
     """Load or initialize the model."""
     # TODO: Replace MockModel with your trained model
-    model = JEPA_RNNCell_tanh(rnn="lstm")
-    model.load_state_dict(torch.load("./jepa_LSTM_wo_hidden_tanh.pth"))
+    model = JEPA_RNNCell(rnn="lstm")
+    model.load_state_dict(torch.load("./jepa_LSTM.pth"))
     model.to(get_device())
-    # utils.freeze_param(model)
     return model
 
 

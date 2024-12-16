@@ -1,195 +1,0 @@
-wandb: Using wandb-core as the SDK backend.  Please refer to https://wandb.me/wandb-core for more information.
-wandb: Currently logged in as: soham-chitnis10. Use `wandb login --relogin` to force relogin
-wandb: Currently logged in as: soham-chitnis10 (dl-nyu). Use `wandb login --relogin` to force relogin
-wandb: Tracking run with wandb version 0.19.0
-wandb: Run data is saved locally in /scratch/sc11537/dl_proj/wandb/run-20241211_000921-n33s0axm
-wandb: Run `wandb offline` to turn off syncing.
-wandb: Syncing run gallant-flower-74
-wandb: ⭐️ View project at https://wandb.ai/dl-nyu/JEPA
-wandb: 🚀 View run at https://wandb.ai/dl-nyu/JEPA/runs/n33s0axm
-Namespace(batch_size=64, lr=0.001, epochs=10, weight_decay=1e-05, lam=0.005, encoder='resnet50', seed=0, num_workers=6, teacher_forcing=False)
-Using device: cuda
-Saving Dir: ../jepa_models_tg/1733893761.898661
-132307 14701
-  0%|          | 0/10 [00:00<?, ?it/s]
-0it [00:00, ?it/s][A/scratch/sc11537/dl_proj/dataset.py:33: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at /opt/conda/conda-bld/pytorch_1729647327249/work/torch/csrc/utils/tensor_numpy.cpp:206.)
-  states = torch.from_numpy(self.states[i]).float().to(self.device)
-
-1it [00:11, 11.32s/it][A
-2it [00:19,  9.71s/it][A
-3it [00:28,  9.17s/it][A
-4it [00:36,  8.91s/it][A
-5it [00:45,  8.95s/it][A
-6it [00:54,  8.96s/it][A
-7it [01:03,  8.96s/it][A
-8it [01:12,  8.94s/it][A
-9it [01:21,  8.94s/it][A
-10it [01:30,  8.95s/it][A
-11it [01:39,  8.94s/it][A
-12it [01:48,  8.95s/it][A
-13it [01:57,  8.94s/it][A
-14it [02:06,  8.94s/it][A
-15it [02:15,  8.93s/it][A
-16it [02:24,  8.92s/it][A
-17it [02:33,  8.90s/it][A
-18it [02:42,  8.92s/it][A
-19it [02:50,  8.92s/it][A
-20it [02:59,  8.92s/it][A
-21it [03:08,  8.93s/it][A
-22it [03:17,  8.96s/it][A
-23it [03:26,  8.94s/it][A
-24it [03:35,  8.94s/it][A
-25it [03:44,  8.94s/it][A
-26it [03:53,  8.92s/it][A
-27it [04:02,  8.92s/it][A
-28it [04:11,  8.91s/it][A
-29it [04:20,  8.91s/it][A
-30it [04:29,  8.90s/it][A
-31it [04:38,  8.93s/it][A
-32it [04:47,  8.93s/it][A
-33it [04:55,  8.92s/it][A
-34it [05:04,  8.93s/it][A
-35it [05:13,  8.91s/it][A
-36it [05:22,  8.91s/it][A
-37it [05:31,  8.91s/it][A
-38it [05:40,  8.92s/it][A
-39it [05:49,  8.91s/it][A
-40it [05:58,  8.92s/it][A
-41it [06:07,  8.92s/it][A
-42it [06:16,  8.93s/it][A
-43it [06:25,  8.92s/it][A
-44it [06:34,  8.93s/it][A
-45it [06:43,  8.93s/it][A
-46it [06:51,  8.93s/it][A
-47it [07:00,  8.92s/it][A
-48it [07:09,  8.92s/it][A
-49it [07:18,  8.92s/it][A
-50it [07:27,  8.91s/it][A
-51it [07:36,  8.91s/it][A
-52it [07:45,  8.91s/it][A
-53it [07:54,  8.90s/it][A
-54it [08:03,  8.90s/it][A
-55it [08:12,  8.89s/it][A
-56it [08:20,  8.88s/it][A
-57it [08:29,  8.88s/it][A
-58it [08:38,  8.88s/it][A
-59it [08:47,  8.91s/it][A
-60it [08:56,  8.91s/it][A
-61it [09:05,  8.91s/it][A
-62it [09:14,  8.91s/it][A
-63it [09:23,  8.92s/it][A
-64it [09:32,  8.93s/it][A
-65it [09:41,  8.93s/it][A
-66it [09:50,  8.93s/it][A
-67it [09:59,  8.93s/it][A
-68it [10:07,  8.91s/it][A
-69it [10:16,  8.91s/it][A
-70it [10:25,  8.91s/it][A
-71it [10:34,  8.91s/it][A
-72it [10:43,  8.91s/it][A
-73it [10:52,  8.93s/it][A
-74it [11:01,  8.93s/it][A
-75it [11:10,  8.91s/it][A
-76it [11:19,  8.91s/it][A
-77it [11:28,  8.90s/it][A
-78it [11:37,  8.90s/it][A
-79it [11:45,  8.90s/it][A
-80it [11:54,  8.91s/it][A
-81it [12:03,  8.90s/it][A
-82it [12:12,  8.89s/it][A
-83it [12:21,  8.88s/it][A
-84it [12:30,  8.89s/it][A
-85it [12:39,  8.89s/it][A
-86it [12:48,  8.91s/it][A
-87it [12:57,  8.90s/it][A
-88it [13:06,  8.91s/it][A
-89it [13:14,  8.90s/it][A
-90it [13:23,  8.90s/it][A
-91it [13:32,  8.89s/it][A
-92it [13:41,  8.90s/it][A
-93it [13:50,  8.90s/it][A
-94it [13:59,  8.89s/it][A
-95it [14:08,  8.90s/it][A
-96it [14:17,  8.89s/it][A
-97it [14:26,  8.89s/it][A
-98it [14:34,  8.89s/it][A
-99it [14:43,  8.90s/it][A
-100it [14:52,  8.90s/it][A
-101it [15:01,  8.90s/it][A
-102it [15:10,  8.90s/it][A
-103it [15:19,  8.89s/it][A
-104it [15:28,  8.90s/it][A
-105it [15:37,  8.90s/it][A
-106it [15:46,  8.90s/it][A
-107it [15:55,  8.91s/it][A
-108it [16:03,  8.92s/it][A
-109it [16:12,  8.91s/it][A
-110it [16:21,  8.90s/it][A
-111it [16:30,  8.90s/it][A
-112it [16:39,  8.90s/it][A
-113it [16:48,  8.91s/it][A
-114it [16:57,  8.91s/it][A
-115it [17:06,  8.90s/it][A
-116it [17:15,  8.91s/it][A
-117it [17:24,  8.90s/it][A
-118it [17:33,  8.91s/it][A
-119it [17:41,  8.92s/it][A
-120it [17:50,  8.93s/it][A
-121it [17:59,  8.94s/it][A
-122it [18:08,  8.93s/it][A
-123it [18:17,  8.93s/it][A
-124it [18:26,  8.92s/it][A
-125it [18:35,  8.90s/it][A
-126it [18:44,  8.89s/it][A
-127it [18:53,  8.89s/it][A
-128it [19:02,  8.89s/it][A
-129it [19:11,  8.89s/it][A
-130it [19:19,  8.90s/it][A
-131it [19:28,  8.90s/it][A
-132it [19:37,  8.90s/it][A
-133it [19:46,  8.90s/it][A
-134it [19:55,  8.90s/it][A
-135it [20:04,  8.90s/it][A
-136it [20:13,  8.90s/it][A
-137it [20:22,  8.90s/it][A
-138it [20:31,  8.92s/it][A
-139it [20:40,  8.92s/it][A
-140it [20:49,  8.92s/it][A
-141it [20:58,  8.96s/it][A
-142it [21:06,  8.94s/it][A
-143it [21:15,  8.92s/it][A
-144it [21:24,  8.90s/it][A
-145it [21:33,  8.90s/it][A
-146it [21:42,  8.91s/it][A
-147it [21:51,  8.91s/it][A
-148it [22:00,  8.91s/it][A
-149it [22:09,  8.90s/it][A
-150it [22:18,  8.90s/it][A
-151it [22:27,  8.89s/it][A
-152it [22:35,  8.90s/it][A
-153it [22:44,  8.90s/it][A
-154it [22:53,  8.89s/it][A
-155it [23:02,  8.91s/it][A
-156it [23:11,  8.91s/it][A
-157it [23:20,  8.91s/it][A
-158it [23:29,  8.92s/it][A
-159it [23:38,  8.91s/it][A
-160it [23:47,  8.92s/it][A
-161it [23:56,  8.90s/it][A
-162it [24:05,  8.90s/it][A
-163it [24:13,  8.90s/it][A
-164it [24:22,  8.90s/it][A
-165it [24:31,  8.89s/it][A
-166it [24:40,  8.90s/it][A
-167it [24:49,  8.92s/it][A
-168it [24:58,  8.91s/it][A
-169it [25:07,  8.91s/it][A
-170it [25:16,  8.90s/it][A
-171it [25:25,  8.88s/it][A
-172it [25:34,  8.91s/it][A
-173it [25:42,  8.91s/it][A
-174it [25:51,  8.90s/it][A
-175it [26:00,  8.89s/it][A
-176it [26:09,  8.89s/it][A
-177it [26:18,  8.89s/it][A
-178it [26:27,  8.87s/it][A
