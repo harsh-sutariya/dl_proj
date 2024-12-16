@@ -64,7 +64,7 @@ class Encoder(nn.Module):
     def forward(self, img):
         return self.fc(self.enc(img))                  
 
-class JEPA_RNNCell(torch.nn.Module):
+class JEPA_RNNCell_tanh(torch.nn.Module):
     def __init__(self, encoder="resnet", rnn="gru",device="cuda", *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.device = device
